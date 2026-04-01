@@ -159,15 +159,19 @@ def parse_date_from_image_id(image_id, sensor):
         return datetime.strptime(image_id[17:25], '%Y%m%d')
 
 
-def find_paired_tiles(fid_dir, max_day_gap=3):
+def find_paired_tiles(fid_dir):
     """Find S2 and S1 tiles that can be paired by acquisition date.
 
     For each deforestation site (FID), we have S2 and S1 tiles from different dates.
-    This function matches S2 and S1 tiles that were acquired within `max_day_gap` days
-    of each other, so they represent roughly the same ground conditions.
+    This function matches each S2 tile to the closest S1 tile acquired BEFORE (or on
+    the same day as) the S2 acquisition, since in a real scenario we would not have
+    access to future SAR imagery.
 
-    Tiles that can't be paired (no matching S1 for an S2, or vice versa) are still
-    kept as unpaired records (with s1_path=None or s2_path=None).
+    No hard day-gap cutoff is applied; instead, `day_gap` is stored in each record
+    so we can later build a histogram and decide the appropriate time window.
+
+    Tiles that can't be paired (no S1 before S2) are still kept as unpaired records
+    (with s1_path=None).
     """
     fid = os.path.basename(fid_dir)
     records = []
@@ -213,15 +217,18 @@ def find_paired_tiles(fid_dir, max_day_gap=3):
         s2_list = sorted(s2_tiles.get(key, []), key=lambda x: x[1])
         s1_list = sorted(s1_tiles.get(key, []), key=lambda x: x[1])
 
-        # For each S2 tile, find the S1 tile with the smallest time gap
+        # For each S2 tile, find the closest S1 tile acquired BEFORE (or same day)
         for s2_id, s2_date, s2_path in s2_list:
             best_s1 = None
-            best_gap = timedelta(days=max_day_gap + 1)
+            best_gap = None
             for s1_id, s1_date, s1_path in s1_list:
                 if (evt_bef, tile_idx, s1_id) in paired_s1:
                     continue  # already used by another S2 tile
-                gap = abs(s2_date - s1_date)
-                if gap <= timedelta(days=max_day_gap) and gap < best_gap:
+                # S1 must be on or before S2 date (no future imagery)
+                if s1_date > s2_date:
+                    continue
+                gap = (s2_date - s1_date).days
+                if best_gap is None or gap < best_gap:
                     best_s1 = (s1_id, s1_path)
                     best_gap = gap
             if best_s1:
@@ -231,9 +238,10 @@ def find_paired_tiles(fid_dir, max_day_gap=3):
                     'fid': fid, 'evt_bef': evt_bef, 'tile_idx': tile_idx,
                     's2_path': s2_path, 's1_path': best_s1[1],
                     's2_id': s2_id, 's1_id': best_s1[0],
+                    'day_gap': best_gap,
                 })
 
-    # --- Add unpaired S2 tiles (no matching S1 within max_day_gap) ---
+    # --- Add unpaired S2 tiles (no S1 acquired before them) ---
     for key in sorted(s2_tiles.keys()):
         evt_bef, tile_idx = key
         for s2_id, _, s2_path in s2_tiles[key]:
@@ -242,17 +250,7 @@ def find_paired_tiles(fid_dir, max_day_gap=3):
                     'fid': fid, 'evt_bef': evt_bef, 'tile_idx': tile_idx,
                     's2_path': s2_path, 's1_path': None,
                     's2_id': s2_id, 's1_id': None,
-                })
-
-    # --- Add unpaired S1 tiles (no matching S2 within max_day_gap) ---
-    for key in sorted(s1_tiles.keys()):
-        evt_bef, tile_idx = key
-        for s1_id, _, s1_path in s1_tiles[key]:
-            if (evt_bef, tile_idx, s1_id) not in paired_s1:
-                records.append({
-                    'fid': fid, 'evt_bef': evt_bef, 'tile_idx': tile_idx,
-                    's2_path': None, 's1_path': s1_path,
-                    's2_id': None, 's1_id': s1_id,
+                    'day_gap': None,
                 })
 
     return records
