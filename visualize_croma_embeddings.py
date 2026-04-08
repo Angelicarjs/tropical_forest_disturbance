@@ -19,11 +19,14 @@ Usage:
   python visualize_croma_embeddings.py --mode joint             # Joint (multimodal)
   python visualize_croma_embeddings.py --mode compare           # All three
   python visualize_croma_embeddings.py --no-launch              # Don't open browser
+  python visualize_croma_embeddings.py --tiles-dir /path/to/tiles  # Custom tiles folder
+  python visualize_croma_embeddings.py --percentage 25          # Use 25% of the data
 """
 
 import os
 import glob
 import argparse
+import random
 import numpy as np
 import torch
 import rasterio            # library for reading GeoTIFF satellite images
@@ -491,6 +494,10 @@ def main():
     parser.add_argument('--dataset-name', type=str, default='croma_deforestation')
     parser.add_argument('--no-launch', action='store_true',
                         help='Do not launch FiftyOne app')
+    parser.add_argument('--tiles-dir', type=str, default=None,
+                        help='Path to the CROMA tiles folder (default: ~/Desktop/Master/thesis/tiles/croma)')
+    parser.add_argument('--percentage', type=float, default=100.0,
+                        help='Percentage of data to use, between 0 and 100 (default: 100)')
     args = parser.parse_args()
 
     # --- Choose compute device: GPU > Apple Silicon > CPU ---
@@ -508,8 +515,11 @@ def main():
     else:
         requested_modes = [args.mode]
 
+    # --- Resolve tiles directory ---
+    tiles_base = os.path.expanduser(args.tiles_dir) if args.tiles_dir else TILES_BASE
+
     # --- Find all deforestation site folders (fid_*) ---
-    fid_dirs = sorted(glob.glob(os.path.join(TILES_BASE, 'fid_*')))
+    fid_dirs = sorted(glob.glob(os.path.join(tiles_base, 'fid_*')))
     if args.fids:
         fid_set = {f'fid_{f}' for f in args.fids}
         fid_dirs = [d for d in fid_dirs if os.path.basename(d) in fid_set]
@@ -520,6 +530,13 @@ def main():
     for fid_dir in fid_dirs:
         all_records.extend(find_paired_tiles(fid_dir))
     print(f"Found {len(all_records)} tile records")
+
+    # --- Subsample if --percentage < 100 ---
+    if args.percentage < 100.0:
+        k = max(1, int(len(all_records) * args.percentage / 100.0))
+        random.seed(42)
+        all_records = random.sample(all_records, k)
+        print(f"Subsampled to {len(all_records)} records ({args.percentage}%)")
 
     if not all_records:
         print("No tiles found.")
