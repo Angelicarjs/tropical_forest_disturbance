@@ -72,7 +72,7 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.path.join(_SCRIPT_DIR, 'data_csv')
 
 if os.path.exists(os.path.expanduser('~/thesis_scripts')):
-    _DEFAULT_CSV_DIR = os.path.expanduser('~/thesis_scripts/data_csv')
+    _DEFAULT_CSV_DIR = _DATA_DIR  # data_csv/ next to the script
     _DEFAULT_OUTPUT = os.path.expanduser('~/thesis_tiles')
 else:
     _DEFAULT_CSV_DIR = _DATA_DIR
@@ -493,14 +493,14 @@ def main():
         records = [r for r in records if r['fid'] in fid_set]
         logger.info(f"Filtered to {len(records)} requested FIDs")
 
-    if args.sample_pct < 100.0:
+    if records and args.sample_pct < 100.0:
         import random
         random.seed(42)
         n = max(1, int(len(records) * args.sample_pct / 100.0))
         records = random.sample(records, n)
         logger.info(f"Sampled {n} FIDs ({args.sample_pct}%)")
 
-    if args.sample_n:
+    if records and args.sample_n:
         import random
         random.seed(42)
         n = min(args.sample_n, len(records))
@@ -508,7 +508,7 @@ def main():
         logger.info(f"Sampled {n} FIDs (--sample-n)")
 
     if not records:
-        logger.error("No records to process")
+        logger.error("No records to process. Check that CSVs exist in: " + csv_dir)
         return
 
     os.makedirs(output_base, exist_ok=True)
