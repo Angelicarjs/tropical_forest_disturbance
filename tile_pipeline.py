@@ -1,22 +1,43 @@
 #!/usr/bin/env python3
 """
-Pipeline to download Sentinel-1 and Sentinel-2 tiles from Google Earth Engine,
-clipped to deforestation polygons, in native resolution and CROMA-ready formats.
+Pipeline to download Sentinel-1 and Sentinel-2 tiles from Google Earth Engine
+for multiple foundation models (CROMA, TerraFM, Clay, SkySense).
+
+Downloads master tiles at 534x534 pixels (5340m @ 10m), the largest input size
+needed (TerraFM). Smaller crops for other models are done at embedding time.
+
+Products downloaded per image ID:
+  - S2 L2A  (COPERNICUS/S2_SR_HARMONIZED)  — all models
+  - S2 L1C  (COPERNICUS/S2_HARMONIZED)     — TerraFM
+  - S1 GRD  (COPERNICUS/S1_GRD)            — CROMA, SkySense
+  - S1 RTC  (COPERNICUS/S1_RTC)            — TerraFM, Clay
 
 Output structure:
   tiles/
-  ├── native/
+  ├── s2_l2a/
   │   └── fid_{fid}/
-  │       ├── s2_evt/{image_id}/{res}m/tile_{n}.tif
-  │       ├── s2_bef/{image_id}/{res}m/tile_{n}.tif
-  │       ├── s1_evt/{image_id}/10m/tile_{n}.tif
-  │       └── s1_bef/{image_id}/10m/tile_{n}.tif
-  └── croma/
+  │       ├── evt/{image_id}/tile_{n}.tif   (13 bands @ 10m, 534x534)
+  │       ├── bef/{image_id}/tile_{n}.tif
+  │       └── aft/{image_id}/tile_{n}.tif
+  ├── s2_l1c/
+  │   └── fid_{fid}/
+  │       ├── evt/{image_id}/tile_{n}.tif   (13 bands @ 10m, 534x534)
+  │       ├── bef/{image_id}/tile_{n}.tif
+  │       └── aft/{image_id}/tile_{n}.tif
+  ├── s1_grd/
+  │   └── fid_{fid}/
+  │       ├── evt/{image_id}/tile_{n}.tif   (VV+VH @ 10m, 534x534)
+  │       ├── bef/{image_id}/tile_{n}.tif
+  │       └── aft/{image_id}/tile_{n}.tif
+  └── s1_rtc/
       └── fid_{fid}/
-          ├── s2_evt/{image_id}/tile_{n}.tif   (12 bands @ 10m, 120x120)
-          ├── s2_bef/{image_id}/tile_{n}.tif
-          ├── s1_evt/{image_id}/tile_{n}.tif   (symlink to native S1)
-          └── s1_bef/{image_id}/tile_{n}.tif   (symlink to native S1)
+          ├── evt/{image_id}/tile_{n}.tif   (VV+VH @ 10m, 534x534)
+          ├── bef/{image_id}/tile_{n}.tif
+          └── aft/{image_id}/tile_{n}.tif
+
+Deduplication:
+  Merges v1, v2, v3 CSVs and deduplicates (fid, image_id, window, sensor) tuples
+  so each image is downloaded only once even if it appears in multiple filter versions.
 
 Usage:
   python tile_pipeline.py                          # Process all FIDs (sequential)
@@ -25,6 +46,7 @@ Usage:
   python tile_pipeline.py --fids 193               # Process specific FIDs
   python tile_pipeline.py --fids 193 --first-only  # One image per category (test)
   python tile_pipeline.py --dry-run                # Preview download counts
+  python tile_pipeline.py --products s2_l2a s1_grd # Only specific products
 """
 
 import ee
@@ -36,7 +58,6 @@ import time
 import argparse
 import logging
 import multiprocessing as mp
-from functools import partial
 from shapely.geometry import shape, box
 from shapely.ops import transform as shapely_transform
 from pyproj import Transformer
@@ -47,29 +68,49 @@ from pyproj import Transformer
 
 GEE_PROJECT = 'zinc-wares-316319'
 
-# Detect environment: cluster vs local (used as defaults, overridable via CLI)
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.join(_SCRIPT_DIR, 'data_csv')
+
 if os.path.exists(os.path.expanduser('~/thesis_scripts')):
-    _DEFAULT_CSV = os.path.expanduser('~/thesis_scripts/s1_s2_images_thesis_v2.csv')
+    _DEFAULT_CSV_DIR = os.path.expanduser('~/thesis_scripts/data_csv')
     _DEFAULT_OUTPUT = os.path.expanduser('~/thesis_tiles')
 else:
-    _DEFAULT_CSV = '/Users/angelicamariamorenorojas/Desktop/Master/thesis/data/s1_s2_images_thesis_v2.csv'
+    _DEFAULT_CSV_DIR = _DATA_DIR
     _DEFAULT_OUTPUT = '/Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles'
-CRS_CODE = 'EPSG:3857'
-TILE_SIZE_M = 1200  # 120px at 10m, matching CROMA's default
 
-# Sentinel-2 band groups by native resolution
-S2_NATIVE_BANDS = {
-    10: ['B2', 'B3', 'B4', 'B8'],
-    20: ['B5', 'B6', 'B7', 'B8A', 'B11', 'B12'],
-    60: ['B1', 'B9'],  # B10 (cirrus) not available in S2_SR_HARMONIZED (L2A)
+CSV_FILES = ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+
+CRS_CODE = 'EPSG:3857'
+TILE_SIZE_PX = 534
+TILE_SIZE_M = TILE_SIZE_PX * 10  # 5340m at 10m resolution
+
+# GEE collection IDs per product
+COLLECTIONS = {
+    's2_l2a': 'COPERNICUS/S2_SR_HARMONIZED',
+    's2_l1c': 'COPERNICUS/S2_HARMONIZED',
+    's1_grd': 'COPERNICUS/S1_GRD',
+    's1_rtc': 'COPERNICUS/S1_RTC',
 }
 
-# CROMA S2: 12 bands at 10m (no B10/cirrus)
-CROMA_S2_BANDS = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B11', 'B12']
+# Bands per product (download all bands relevant to any model)
+PRODUCT_BANDS = {
+    's2_l2a': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B11', 'B12'],
+    's2_l1c': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B10', 'B11', 'B12'],
+    's1_grd': ['VV', 'VH'],
+    's1_rtc': ['VV', 'VH'],
+}
 
-# Sentinel-1 bands (VV + VH, in dB from GEE)
-S1_BANDS = ['VV', 'VH']
+ALL_PRODUCTS = list(COLLECTIONS.keys())
+
+# Which CSV columns map to which (sensor, window)
+IMAGE_ID_COLUMNS = {
+    ('s2', 'evt'): 'evtIdsS2',
+    ('s2', 'bef'): 'befIdsS2',
+    ('s2', 'aft'): 'aftIdsS2',
+    ('s1', 'evt'): 'evtIdsS1',
+    ('s1', 'bef'): 'befIdsS1',
+    ('s1', 'aft'): 'aftIdsS1',
+}
 
 # Rate limiting
 MAX_RETRIES = 5
@@ -126,22 +167,21 @@ def create_tile_grid(polygon_3857):
 # GEE download
 # ──────────────────────────────────────────────────────────────────────────────
 
-def download_tile(image, bands, tile_bounds_3857, resolution_m, output_path):
+def download_tile(image, bands, tile_bounds_3857, output_path):
+    """Download a single 534x534 tile at 10m resolution."""
     if os.path.exists(output_path):
         return True
 
     minx, miny, maxx, maxy = tile_bounds_3857
-    width = int(round((maxx - minx) / resolution_m))
-    height = int(round((maxy - miny) / resolution_m))
 
     request = {
         'expression': image.select(bands),
         'fileFormat': 'GEO_TIFF',
         'grid': {
-            'dimensions': {'width': width, 'height': height},
+            'dimensions': {'width': TILE_SIZE_PX, 'height': TILE_SIZE_PX},
             'affineTransform': {
-                'scaleX': resolution_m, 'shearX': 0, 'translateX': minx,
-                'shearY': 0, 'scaleY': -resolution_m, 'translateY': maxy,
+                'scaleX': 10, 'shearX': 0, 'translateX': minx,
+                'shearY': 0, 'scaleY': -10, 'translateY': maxy,
             },
             'crsCode': CRS_CODE,
         },
@@ -192,167 +232,157 @@ def save_progress(completed, output_base):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CSV parsing
+# CSV parsing with deduplication across v1/v2/v3
 # ──────────────────────────────────────────────────────────────────────────────
 
-def parse_csv(csv_path, first_only=False):
-    records = []
-    with open(csv_path, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            fid = row['fid'].strip()
-            geo = json.loads(row['.geo'])
-            record = {'fid': fid, 'geometry': geo, 'images': {}}
+def parse_and_merge_csvs(csv_dir, first_only=False):
+    """
+    Parse v1, v2, v3 CSVs and merge them. For each FID, collect the union
+    of all unique image IDs across filter versions to avoid re-downloading.
 
-            for category, col in [
-                ('s2_evt', 'evtIdsS2'), ('s2_bef', 'befIdsS2'),
-                ('s1_evt', 'evtIdsS1'), ('s1_bef', 'befIdsS1'),
-            ]:
-                raw = row.get(col, '').strip()
-                if raw:
+    Returns:
+        list of records: [{'fid': str, 'geometry': dict, 'images': {
+            ('s2', 'evt'): [id1, id2, ...],
+            ('s1', 'bef'): [id1, ...],
+            ...
+        }, 'versions': set}]
+    """
+    # fid -> merged record
+    merged = {}
+
+    for csv_name in CSV_FILES:
+        csv_path = os.path.join(csv_dir, csv_name)
+        if not os.path.exists(csv_path):
+            logger.warning(f"CSV not found, skipping: {csv_path}")
+            continue
+
+        version = csv_name.split('_')[0]  # 'v1', 'v2', 'v3'
+        count = 0
+
+        with open(csv_path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                fid = row['fid'].strip()
+                if not fid:
+                    continue
+
+                if fid not in merged:
+                    geo = json.loads(row['.geo'])
+                    merged[fid] = {
+                        'fid': fid,
+                        'geometry': geo,
+                        'images': {},
+                        'versions': set(),
+                    }
+
+                merged[fid]['versions'].add(version)
+
+                for (sensor, window), col in IMAGE_ID_COLUMNS.items():
+                    raw = row.get(col, '').strip()
+                    if not raw:
+                        continue
                     ids = [img_id.strip() for img_id in raw.split(',') if img_id.strip()]
-                    if ids:
-                        record['images'][category] = [ids[0]] if first_only else ids
+                    if not ids:
+                        continue
 
-            if record['images']:
-                records.append(record)
+                    key = (sensor, window)
+                    if key not in merged[fid]['images']:
+                        merged[fid]['images'][key] = set()
+                    merged[fid]['images'][key].update(ids)
+
+                count += 1
+
+        logger.info(f"Parsed {csv_name}: {count} rows")
+
+    # Convert sets to sorted lists and apply first_only
+    records = []
+    total_unique_pairs = 0
+    for fid, data in merged.items():
+        for key in data['images']:
+            id_list = sorted(data['images'][key])
+            if first_only:
+                id_list = id_list[:1]
+            data['images'][key] = id_list
+            total_unique_pairs += len(id_list)
+        if data['images']:
+            records.append(data)
+
+    logger.info(f"Merged: {len(records)} FIDs, {total_unique_pairs} unique (fid, image, window) pairs")
     return records
-
-
-def get_gee_image(image_id, sensor):
-    if sensor == 's2':
-        return ee.Image('COPERNICUS/S2_SR_HARMONIZED/' + image_id)
-    else:
-        return ee.Image('COPERNICUS/S1_GRD/' + image_id)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Processing logic
 # ──────────────────────────────────────────────────────────────────────────────
 
-def process_tiles_for_image(fid, category, image_id, image, sensor,
-                            geom_3857, completed, output_base,
-                            croma_only=False):
-    safe_id = image_id.replace('/', '_')
-    downloads = 0
-    tiles = create_tile_grid(geom_3857)
-
-    for tile_idx, tile in enumerate(tiles):
-        bounds = tile.bounds
-
-        # ── Native resolution ──
-        if not croma_only:
-            if sensor == 's2':
-                for res_m, bands in S2_NATIVE_BANDS.items():
-                    key = f"native|{fid}|{category}|{safe_id}|{res_m}m|tile_{tile_idx}"
-                    if key in completed:
-                        continue
-                    path = os.path.join(
-                        output_base, 'native', f'fid_{fid}', category,
-                        safe_id, f'{res_m}m', f'tile_{tile_idx}.tif'
-                    )
-                    if download_tile(image, bands, bounds, res_m, path):
-                        completed.add(key)
-                        downloads += 1
-            else:
-                key = f"native|{fid}|{category}|{safe_id}|10m|tile_{tile_idx}"
-                if key not in completed:
-                    path = os.path.join(
-                        output_base, 'native', f'fid_{fid}', category,
-                        safe_id, '10m', f'tile_{tile_idx}.tif'
-                    )
-                    if download_tile(image, S1_BANDS, bounds, 10, path):
-                        completed.add(key)
-                        downloads += 1
-
-        # ── CROMA format (12 bands @ 10m for S2, direct download for S1) ──
-        key = f"croma|{fid}|{category}|{safe_id}|tile_{tile_idx}"
-        if key in completed:
-            continue
-
-        croma_path = os.path.join(
-            output_base, 'croma', f'fid_{fid}', category,
-            safe_id, f'tile_{tile_idx}.tif'
-        )
-
-        if sensor == 's2':
-            if download_tile(image, CROMA_S2_BANDS, bounds, 10, croma_path):
-                completed.add(key)
-                downloads += 1
-        else:
-            if croma_only:
-                # Download S1 directly (no native to symlink to)
-                if download_tile(image, S1_BANDS, bounds, 10, croma_path):
-                    completed.add(key)
-                    downloads += 1
-            else:
-                # S1: identical to native — symlink instead of duplicate download
-                native_path = os.path.join(
-                    output_base, 'native', f'fid_{fid}', category,
-                    safe_id, '10m', f'tile_{tile_idx}.tif'
-                )
-                if os.path.exists(native_path) and not os.path.exists(croma_path):
-                    os.makedirs(os.path.dirname(croma_path), exist_ok=True)
-                    os.symlink(os.path.abspath(native_path), croma_path)
-                completed.add(key)
-                downloads += 1
-
-    return downloads
-
-
-def process_fid(record, completed, output_base, croma_only=False):
+def process_fid(record, completed, output_base, products):
+    """Download all tiles for a single FID across all requested products."""
     fid = record['fid']
     geom_4326 = shape(record['geometry'])
     geom_3857 = project_to_3857(geom_4326)
     tiles = create_tile_grid(geom_3857)
 
-    logger.info(f"FID {fid}: {len(tiles)} tiles, "
-                f"categories: {list(record['images'].keys())}")
-
     if not tiles:
         logger.warning(f"FID {fid}: no intersecting tiles")
-        return
+        return 0
 
     total_downloads = 0
-    for category, image_ids in record['images'].items():
-        sensor = 's2' if 's2' in category else 's1'
-        for image_id in image_ids:
-            try:
-                image = get_gee_image(image_id, sensor)
-            except Exception as e:
-                logger.error(f"FID {fid}: failed to load {image_id}: {e}")
-                continue
-            logger.info(f"  {category} | {image_id}")
-            dl = process_tiles_for_image(
-                fid, category, image_id, image, sensor, geom_3857, completed,
-                output_base, croma_only=croma_only
-            )
-            total_downloads += dl
-            save_progress(completed, output_base)
 
-    logger.info(f"FID {fid}: {total_downloads} new downloads")
+    for (sensor, window), image_ids in record['images'].items():
+        # Determine which products to download for this sensor
+        if sensor == 's2':
+            sensor_products = [p for p in products if p.startswith('s2_')]
+        else:
+            sensor_products = [p for p in products if p.startswith('s1_')]
+
+        if not sensor_products:
+            continue
+
+        for image_id in image_ids:
+            safe_id = image_id.replace('/', '_')
+
+            for product in sensor_products:
+                collection_id = COLLECTIONS[product]
+                bands = PRODUCT_BANDS[product]
+
+                try:
+                    image = ee.Image(collection_id + '/' + image_id)
+                except Exception as e:
+                    logger.error(f"FID {fid}: failed to create image {collection_id}/{image_id}: {e}")
+                    continue
+
+                for tile_idx, tile in enumerate(tiles):
+                    key = f"{product}|{fid}|{window}|{safe_id}|tile_{tile_idx}"
+                    if key in completed:
+                        continue
+
+                    path = os.path.join(
+                        output_base, product, f'fid_{fid}',
+                        window, safe_id, f'tile_{tile_idx}.tif'
+                    )
+
+                    if download_tile(image, bands, tile.bounds, path):
+                        completed.add(key)
+                        total_downloads += 1
+
+    return total_downloads
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Parallel worker
 # ──────────────────────────────────────────────────────────────────────────────
 
-def worker_process(worker_id, records, resume, output_base, croma_only=False):
-    """Independent worker that processes a subset of FIDs.
-    Each worker initialises its own GEE session and keeps its own progress file.
-    File-exists checks on disk prevent duplicate downloads across workers."""
-    # Set up per-worker logging
+def worker_process(worker_id, records, resume, output_base, products):
+    """Independent worker that processes a subset of FIDs."""
     worker_log = os.path.join(_SCRIPT_DIR, f'tile_pipeline_worker_{worker_id}.log')
     fh = logging.FileHandler(worker_log)
     fh.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
     logger.addHandler(fh)
 
-    logger.info(f"Worker {worker_id}: starting with {len(records)} FIDs")
+    logger.info(f"Worker {worker_id}: starting with {len(records)} FIDs, products: {products}")
 
-    # Each worker gets its own GEE session
     ee.Initialize(project=GEE_PROJECT)
 
-    # Per-worker progress file
     progress_file = os.path.join(output_base, f'.progress_worker_{worker_id}.json')
     if resume and os.path.exists(progress_file):
         with open(progress_file, 'r') as f:
@@ -369,32 +399,9 @@ def worker_process(worker_id, records, resume, output_base, croma_only=False):
     for idx, record in enumerate(records):
         logger.info(f"Worker {worker_id}: FID {record['fid']} ({idx+1}/{len(records)})")
         try:
-            fid = record['fid']
-            geom_4326 = shape(record['geometry'])
-            geom_3857 = project_to_3857(geom_4326)
-            tiles = create_tile_grid(geom_3857)
-
-            if not tiles:
-                logger.warning(f"Worker {worker_id}: FID {fid} no intersecting tiles")
-                continue
-
-            total_downloads = 0
-            for category, image_ids in record['images'].items():
-                sensor = 's2' if 's2' in category else 's1'
-                for image_id in image_ids:
-                    try:
-                        image = get_gee_image(image_id, sensor)
-                    except Exception as e:
-                        logger.error(f"Worker {worker_id}: FID {fid} failed to load {image_id}: {e}")
-                        continue
-                    dl = process_tiles_for_image(
-                        fid, category, image_id, image, sensor, geom_3857, completed,
-                        output_base, croma_only=croma_only
-                    )
-                    total_downloads += dl
-                    save_worker_progress()
-
-            logger.info(f"Worker {worker_id}: FID {fid} done, {total_downloads} downloads")
+            dl = process_fid(record, completed, output_base, products)
+            logger.info(f"Worker {worker_id}: FID {record['fid']} done, {dl} downloads")
+            save_worker_progress()
         except Exception as e:
             logger.error(f"Worker {worker_id}: FID {record['fid']} error: {e}", exc_info=True)
             save_worker_progress()
@@ -408,31 +415,39 @@ def worker_process(worker_id, records, resume, output_base, croma_only=False):
 # Dry run
 # ──────────────────────────────────────────────────────────────────────────────
 
-def dry_run(records, completed):
-    total_native = 0
-    total_croma = 0
+def dry_run(records, completed, products):
+    total_per_product = {p: 0 for p in products}
+    total_already_done = 0
 
     for record in records:
         geom_3857 = project_to_3857(shape(record['geometry']))
         n_tiles = len(create_tile_grid(geom_3857))
 
-        for category, image_ids in record['images'].items():
-            sensor = 's2' if 's2' in category else 's1'
-            n_imgs = len(image_ids)
+        for (sensor, window), image_ids in record['images'].items():
             if sensor == 's2':
-                total_native += n_tiles * n_imgs * 3  # 3 resolution groups
-                total_croma += n_tiles * n_imgs * 1   # 12-band at 10m
+                sensor_products = [p for p in products if p.startswith('s2_')]
             else:
-                total_native += n_tiles * n_imgs * 1  # VV+VH at 10m
-                # S1 CROMA = symlink, no download
+                sensor_products = [p for p in products if p.startswith('s1_')]
 
-    total = total_native + total_croma
+            for product in sensor_products:
+                for image_id in image_ids:
+                    safe_id = image_id.replace('/', '_')
+                    for tile_idx in range(n_tiles):
+                        key = f"{product}|{record['fid']}|{window}|{safe_id}|tile_{tile_idx}"
+                        if key in completed:
+                            total_already_done += 1
+                        else:
+                            total_per_product[product] += 1
+
+    total = sum(total_per_product.values())
+
     logger.info(f"DRY RUN: {len(records)} FIDs")
-    logger.info(f"  Native:  ~{total_native} downloads")
-    logger.info(f"  CROMA S2: ~{total_croma} downloads (S1 = symlinks)")
-    logger.info(f"  TOTAL:   ~{total} actual downloads")
-    logger.info(f"  Already completed: {len(completed)}")
-    logger.info(f"  Remaining: ~{max(0, total - len(completed))}")
+    logger.info(f"  Products requested: {products}")
+    for product, count in total_per_product.items():
+        est_mb = count * (15 if product.startswith('s2') else 2)
+        logger.info(f"  {product}: ~{count} downloads (~{est_mb / 1000:.1f} GB)")
+    logger.info(f"  TOTAL new downloads: ~{total}")
+    logger.info(f"  Already completed: {total_already_done}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -440,13 +455,15 @@ def dry_run(records, completed):
 # ──────────────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description='Download S1/S2 tiles from GEE')
-    parser.add_argument('--csv', type=str, default=None,
-                        help='Path to input CSV file (default: auto-detect)')
+    parser = argparse.ArgumentParser(
+        description='Download S1/S2 tiles (534x534 @ 10m) for multiple foundation models'
+    )
+    parser.add_argument('--csv-dir', type=str, default=None,
+                        help='Directory containing v1/v2/v3 CSV files (default: auto-detect)')
     parser.add_argument('--output', type=str, default=None,
                         help='Output base directory (default: auto-detect)')
-    parser.add_argument('--croma-only', action='store_true',
-                        help='Only download CROMA format tiles (skip native)')
+    parser.add_argument('--products', nargs='+', choices=ALL_PRODUCTS, default=ALL_PRODUCTS,
+                        help='Which products to download (default: all)')
     parser.add_argument('--fids', nargs='+', type=str,
                         help='Specific FIDs to process')
     parser.add_argument('--first-only', action='store_true',
@@ -457,16 +474,19 @@ def main():
                         help='Show what would be downloaded')
     parser.add_argument('--sample-pct', type=float, default=100.0,
                         help='Percentage of FIDs to process (e.g., 10 for 10%%)')
+    parser.add_argument('--sample-n', type=int, default=None,
+                        help='Exact number of FIDs to sample (e.g., 5)')
     parser.add_argument('--workers', type=int, default=1,
                         help='Number of parallel workers (default: 1, recommended: 4-8)')
     args = parser.parse_args()
 
-    csv_path = args.csv if args.csv else _DEFAULT_CSV
+    csv_dir = args.csv_dir if args.csv_dir else _DEFAULT_CSV_DIR
     output_base = args.output if args.output else _DEFAULT_OUTPUT
+    products = args.products
 
-    logger.info(f"Parsing CSV: {csv_path}")
-    records = parse_csv(csv_path, first_only=args.first_only)
-    logger.info(f"Found {len(records)} FIDs with images")
+    logger.info(f"Parsing CSVs from: {csv_dir}")
+    logger.info(f"Products: {products}")
+    records = parse_and_merge_csvs(csv_dir, first_only=args.first_only)
 
     if args.fids:
         fid_set = set(args.fids)
@@ -475,17 +495,21 @@ def main():
 
     if args.sample_pct < 100.0:
         import random
-        random.seed(42)  # reproducible sampling
+        random.seed(42)
         n = max(1, int(len(records) * args.sample_pct / 100.0))
         records = random.sample(records, n)
         logger.info(f"Sampled {n} FIDs ({args.sample_pct}%)")
 
+    if args.sample_n:
+        import random
+        random.seed(42)
+        n = min(args.sample_n, len(records))
+        records = random.sample(records, n)
+        logger.info(f"Sampled {n} FIDs (--sample-n)")
+
     if not records:
         logger.error("No records to process")
         return
-
-    if args.croma_only:
-        logger.info("CROMA-only mode: skipping native resolution downloads")
 
     os.makedirs(output_base, exist_ok=True)
 
@@ -493,9 +517,7 @@ def main():
         logger.info("Initializing Google Earth Engine...")
         ee.Initialize(project=GEE_PROJECT)
         completed = load_progress(output_base) if args.resume else set()
-        if completed:
-            logger.info(f"Resuming with {len(completed)} completed downloads")
-        dry_run(records, completed)
+        dry_run(records, completed, products)
         return
 
     # ── Parallel mode ──
@@ -503,7 +525,6 @@ def main():
         n_workers = min(args.workers, len(records))
         logger.info(f"Launching {n_workers} parallel workers for {len(records)} FIDs")
 
-        # Distribute FIDs across workers (round-robin for balanced load)
         chunks = [[] for _ in range(n_workers)]
         for i, record in enumerate(records):
             chunks[i % n_workers].append(record)
@@ -511,15 +532,13 @@ def main():
         for i, chunk in enumerate(chunks):
             logger.info(f"  Worker {i}: {len(chunk)} FIDs")
 
-        # Launch workers as separate processes
         with mp.Pool(processes=n_workers) as pool:
             worker_args = [
-                (i, chunk, args.resume, output_base, args.croma_only)
+                (i, chunk, args.resume, output_base, products)
                 for i, chunk in enumerate(chunks)
             ]
             results = pool.starmap(worker_process, worker_args)
 
-        # Merge per-worker progress files into main progress
         all_completed = set()
         for i in range(n_workers):
             pf = os.path.join(output_base, f'.progress_worker_{i}.json')
@@ -533,7 +552,7 @@ def main():
         logger.info(f"Output: {output_base}")
         return
 
-    # ── Sequential mode (original) ──
+    # ── Sequential mode ──
     logger.info("Initializing Google Earth Engine...")
     ee.Initialize(project=GEE_PROJECT)
 
@@ -545,7 +564,9 @@ def main():
     for idx, record in enumerate(records):
         logger.info(f"Processing FID {record['fid']} ({idx+1}/{total_fids})")
         try:
-            process_fid(record, completed, output_base, croma_only=args.croma_only)
+            dl = process_fid(record, completed, output_base, products)
+            logger.info(f"FID {record['fid']}: {dl} new downloads")
+            save_progress(completed, output_base)
         except Exception as e:
             logger.error(f"FID {record['fid']}: unexpected error: {e}", exc_info=True)
             save_progress(completed, output_base)
