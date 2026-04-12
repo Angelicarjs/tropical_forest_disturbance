@@ -1,0 +1,208 @@
+2026-03-30 17:58:42,809 [INFO] Worker 5: starting with 64 FIDs
+2026-03-30 18:01:59,601 [INFO] Worker 5: starting with 64 FIDs
+2026-03-30 18:02:01,044 [INFO] Worker 5: FID 269 (1/64)
+2026-03-30 18:02:08,529 [INFO] Worker 5: FID 269 done, 6 downloads
+2026-03-30 18:02:08,529 [INFO] Worker 5: FID 142 (2/64)
+2026-03-30 18:02:21,117 [INFO] Worker 5: FID 142 done, 10 downloads
+2026-03-30 18:02:21,117 [INFO] Worker 5: FID 215 (3/64)
+2026-03-30 18:02:34,427 [INFO] Worker 5: FID 215 done, 12 downloads
+2026-03-30 18:02:34,427 [INFO] Worker 5: FID 145 (4/64)
+2026-03-30 18:02:54,912 [INFO] Worker 5: FID 145 done, 20 downloads
+2026-03-30 18:02:54,913 [INFO] Worker 5: FID 275 (5/64)
+2026-03-30 18:03:10,814 [INFO] Worker 5: FID 275 done, 14 downloads
+2026-03-30 18:03:10,814 [INFO] Worker 5: FID 96 (6/64)
+2026-03-30 18:03:34,718 [INFO] Worker 5: FID 96 done, 24 downloads
+2026-03-30 18:03:34,718 [INFO] Worker 5: FID 153 (7/64)
+2026-03-30 18:04:08,790 [INFO] Worker 5: FID 153 done, 32 downloads
+2026-03-30 18:04:08,791 [INFO] Worker 5: FID 151 (8/64)
+2026-03-30 18:04:24,076 [INFO] Worker 5: FID 151 done, 14 downloads
+2026-03-30 18:04:24,076 [INFO] Worker 5: FID 232 (9/64)
+2026-03-30 18:05:07,892 [INFO] Worker 5: FID 232 done, 40 downloads
+2026-03-30 18:05:07,892 [INFO] Worker 5: FID 155 (10/64)
+2026-03-30 18:05:25,053 [INFO] Worker 5: FID 155 done, 16 downloads
+2026-03-30 18:05:25,053 [INFO] Worker 5: FID 287 (11/64)
+2026-03-30 18:05:48,337 [INFO] Worker 5: FID 287 done, 22 downloads
+2026-03-30 18:05:48,338 [INFO] Worker 5: FID 281 (12/64)
+2026-03-30 18:06:00,436 [INFO] Worker 5: FID 281 done, 13 downloads
+2026-03-30 18:06:00,436 [INFO] Worker 5: FID 102 (13/64)
+2026-03-30 18:06:24,056 [INFO] Worker 5: FID 102 done, 22 downloads
+2026-03-30 18:06:24,057 [INFO] Worker 5: FID 107 (14/64)
+2026-03-30 18:07:28,120 [INFO] Worker 5: FID 107 done, 60 downloads
+2026-03-30 18:07:28,121 [INFO] Worker 5: FID 233 (15/64)
+2026-03-30 18:07:45,794 [INFO] Worker 5: FID 233 done, 18 downloads
+2026-03-30 18:07:45,795 [INFO] Worker 5: FID 174 (16/64)
+2026-03-30 18:08:23,462 [INFO] Worker 5: FID 174 done, 39 downloads
+2026-03-30 18:08:23,462 [INFO] Worker 5: FID 290 (17/64)
+2026-03-30 18:08:44,490 [INFO] Worker 5: FID 290 done, 22 downloads
+2026-03-30 18:08:44,490 [INFO] Worker 5: FID 163 (18/64)
+2026-03-30 18:09:06,034 [INFO] Worker 5: FID 163 done, 22 downloads
+2026-03-30 18:09:06,034 [INFO] Worker 5: FID 165 (19/64)
+2026-03-30 18:09:16,432 [INFO] Worker 5: FID 165 done, 11 downloads
+2026-03-30 18:09:16,432 [INFO] Worker 5: FID 113 (20/64)
+2026-03-30 18:10:17,866 [INFO] Worker 5: FID 113 done, 64 downloads
+2026-03-30 18:10:17,866 [INFO] Worker 5: FID 241 (21/64)
+2026-03-30 18:10:53,535 [INFO] Worker 5: FID 241 done, 36 downloads
+2026-03-30 18:10:53,536 [INFO] Worker 5: FID 239 (22/64)
+2026-03-30 18:11:24,462 [INFO] Worker 5: FID 239 done, 32 downloads
+2026-03-30 18:11:24,462 [INFO] Worker 5: FID 300 (23/64)
+2026-03-30 18:12:39,180 [INFO] Worker 5: FID 300 done, 72 downloads
+2026-03-30 18:12:39,181 [INFO] Worker 5: FID 301 (24/64)
+2026-03-30 18:13:08,962 [INFO] Worker 5: FID 301 done, 21 downloads
+2026-03-30 18:13:08,962 [INFO] Worker 5: FID 305 (25/64)
+2026-03-30 18:14:44,605 [INFO] Worker 5: FID 305 done, 95 downloads
+2026-03-30 18:14:44,606 [INFO] Worker 5: FID 250 (26/64)
+2026-03-30 18:15:20,901 [INFO] Worker 5: FID 250 done, 36 downloads
+2026-03-30 18:15:20,901 [INFO] Worker 5: FID 309 (27/64)
+2026-03-30 18:17:07,938 [INFO] Worker 5: FID 309 done, 108 downloads
+2026-03-30 18:17:07,938 [INFO] Worker 5: FID 132 (28/64)
+2026-03-30 18:17:36,583 [INFO] Worker 5: FID 132 done, 28 downloads
+2026-03-30 18:17:36,583 [INFO] Worker 5: FID 196 (29/64)
+2026-03-30 18:19:05,851 [INFO] Worker 5: FID 196 done, 108 downloads
+2026-03-30 18:19:05,851 [INFO] Worker 5: FID 199 (30/64)
+2026-03-30 18:20:46,913 [INFO] Worker 5: FID 199 done, 104 downloads
+2026-03-30 18:20:46,913 [INFO] Worker 5: FID 321 (31/64)
+2026-03-30 18:24:26,490 [INFO] Worker 5: FID 321 done, 225 downloads
+2026-03-30 18:24:26,490 [INFO] Worker 5: FID 131 (32/64)
+2026-03-30 18:26:14,154 [INFO] Worker 5: FID 131 done, 104 downloads
+2026-03-30 18:26:14,154 [INFO] Worker 5: FID 195 (33/64)
+2026-03-30 18:26:57,053 [INFO] Worker 5: FID 195 done, 44 downloads
+2026-03-30 18:26:57,054 [INFO] Worker 5: FID 257 (34/64)
+2026-03-30 18:28:13,168 [INFO] Worker 5: FID 257 done, 78 downloads
+2026-03-30 18:28:13,169 [INFO] Worker 5: FID 259 (35/64)
+2026-03-30 18:29:35,871 [INFO] Worker 5: FID 259 done, 81 downloads
+2026-03-30 18:29:35,871 [INFO] Worker 5: FID 260 (36/64)
+2026-03-30 18:34:29,777 [INFO] Worker 5: FID 260 done, 300 downloads
+2026-03-30 18:34:29,778 [INFO] Worker 5: FID 336 (37/64)
+2026-03-30 18:35:24,944 [INFO] Worker 5: FID 336 done, 56 downloads
+2026-03-30 18:35:24,944 [INFO] Worker 5: FID 337 (38/64)
+2026-03-31 08:29:43,698 [INFO] Worker 5: starting with 64 FIDs
+2026-03-31 08:29:45,953 [INFO] Worker 5: resumed with 2021 completed
+2026-03-31 08:29:45,954 [INFO] Worker 5: FID 269 (1/64)
+2026-03-31 08:29:45,989 [INFO] Worker 5: FID 269 done, 0 downloads
+2026-03-31 08:29:45,989 [INFO] Worker 5: FID 142 (2/64)
+2026-03-31 08:29:46,029 [INFO] Worker 5: FID 142 done, 0 downloads
+2026-03-31 08:29:46,029 [INFO] Worker 5: FID 215 (3/64)
+2026-03-31 08:29:46,082 [INFO] Worker 5: FID 215 done, 0 downloads
+2026-03-31 08:29:46,083 [INFO] Worker 5: FID 145 (4/64)
+2026-03-31 08:29:46,135 [INFO] Worker 5: FID 145 done, 0 downloads
+2026-03-31 08:29:46,135 [INFO] Worker 5: FID 275 (5/64)
+2026-03-31 08:29:46,209 [INFO] Worker 5: FID 275 done, 0 downloads
+2026-03-31 08:29:46,210 [INFO] Worker 5: FID 96 (6/64)
+2026-03-31 08:29:46,282 [INFO] Worker 5: FID 96 done, 0 downloads
+2026-03-31 08:29:46,282 [INFO] Worker 5: FID 153 (7/64)
+2026-03-31 08:29:46,365 [INFO] Worker 5: FID 153 done, 0 downloads
+2026-03-31 08:29:46,365 [INFO] Worker 5: FID 151 (8/64)
+2026-03-31 08:29:46,439 [INFO] Worker 5: FID 151 done, 0 downloads
+2026-03-31 08:29:46,439 [INFO] Worker 5: FID 232 (9/64)
+2026-03-31 08:29:46,544 [INFO] Worker 5: FID 232 done, 0 downloads
+2026-03-31 08:29:46,544 [INFO] Worker 5: FID 155 (10/64)
+2026-03-31 08:29:46,628 [INFO] Worker 5: FID 155 done, 0 downloads
+2026-03-31 08:29:46,629 [INFO] Worker 5: FID 287 (11/64)
+2026-03-31 08:29:46,744 [INFO] Worker 5: FID 287 done, 0 downloads
+2026-03-31 08:29:46,744 [INFO] Worker 5: FID 281 (12/64)
+2026-03-31 08:29:46,880 [INFO] Worker 5: FID 281 done, 0 downloads
+2026-03-31 08:29:46,880 [INFO] Worker 5: FID 102 (13/64)
+2026-03-31 08:29:46,995 [INFO] Worker 5: FID 102 done, 0 downloads
+2026-03-31 08:29:46,996 [INFO] Worker 5: FID 107 (14/64)
+2026-03-31 08:29:47,150 [INFO] Worker 5: FID 107 done, 0 downloads
+2026-03-31 08:29:47,150 [INFO] Worker 5: FID 233 (15/64)
+2026-03-31 08:29:47,340 [INFO] Worker 5: FID 233 done, 0 downloads
+2026-03-31 08:29:47,340 [INFO] Worker 5: FID 174 (16/64)
+2026-03-31 08:29:47,503 [INFO] Worker 5: FID 174 done, 0 downloads
+2026-03-31 08:29:47,503 [INFO] Worker 5: FID 290 (17/64)
+2026-03-31 08:29:47,608 [INFO] Worker 5: FID 290 done, 0 downloads
+2026-03-31 08:29:47,608 [INFO] Worker 5: FID 163 (18/64)
+2026-03-31 08:29:47,724 [INFO] Worker 5: FID 163 done, 0 downloads
+2026-03-31 08:29:47,724 [INFO] Worker 5: FID 165 (19/64)
+2026-03-31 08:29:47,841 [INFO] Worker 5: FID 165 done, 0 downloads
+2026-03-31 08:29:47,841 [INFO] Worker 5: FID 113 (20/64)
+2026-03-31 08:29:48,010 [INFO] Worker 5: FID 113 done, 0 downloads
+2026-03-31 08:29:48,010 [INFO] Worker 5: FID 241 (21/64)
+2026-03-31 08:29:48,202 [INFO] Worker 5: FID 241 done, 0 downloads
+2026-03-31 08:29:48,202 [INFO] Worker 5: FID 239 (22/64)
+2026-03-31 08:29:48,372 [INFO] Worker 5: FID 239 done, 0 downloads
+2026-03-31 08:29:48,372 [INFO] Worker 5: FID 300 (23/64)
+2026-03-31 08:29:48,563 [INFO] Worker 5: FID 300 done, 0 downloads
+2026-03-31 08:29:48,563 [INFO] Worker 5: FID 301 (24/64)
+2026-03-31 08:29:48,782 [INFO] Worker 5: FID 301 done, 0 downloads
+2026-03-31 08:29:48,783 [INFO] Worker 5: FID 305 (25/64)
+2026-03-31 08:29:48,980 [INFO] Worker 5: FID 305 done, 0 downloads
+2026-03-31 08:29:48,980 [INFO] Worker 5: FID 250 (26/64)
+2026-03-31 08:29:49,170 [INFO] Worker 5: FID 250 done, 0 downloads
+2026-03-31 08:29:49,170 [INFO] Worker 5: FID 309 (27/64)
+2026-03-31 08:29:49,370 [INFO] Worker 5: FID 309 done, 0 downloads
+2026-03-31 08:29:49,370 [INFO] Worker 5: FID 132 (28/64)
+2026-03-31 08:29:49,668 [INFO] Worker 5: FID 132 done, 0 downloads
+2026-03-31 08:29:49,668 [INFO] Worker 5: FID 196 (29/64)
+2026-03-31 08:29:50,048 [INFO] Worker 5: FID 196 done, 0 downloads
+2026-03-31 08:29:50,048 [INFO] Worker 5: FID 199 (30/64)
+2026-03-31 08:29:50,322 [INFO] Worker 5: FID 199 done, 0 downloads
+2026-03-31 08:29:50,322 [INFO] Worker 5: FID 321 (31/64)
+2026-03-31 08:29:50,594 [INFO] Worker 5: FID 321 done, 0 downloads
+2026-03-31 08:29:50,594 [INFO] Worker 5: FID 131 (32/64)
+2026-03-31 08:29:50,875 [INFO] Worker 5: FID 131 done, 0 downloads
+2026-03-31 08:29:50,875 [INFO] Worker 5: FID 195 (33/64)
+2026-03-31 08:29:51,109 [INFO] Worker 5: FID 195 done, 0 downloads
+2026-03-31 08:29:51,109 [INFO] Worker 5: FID 257 (34/64)
+2026-03-31 08:29:51,498 [INFO] Worker 5: FID 257 done, 0 downloads
+2026-03-31 08:29:51,499 [INFO] Worker 5: FID 259 (35/64)
+2026-03-31 08:29:51,746 [INFO] Worker 5: FID 259 done, 0 downloads
+2026-03-31 08:29:51,747 [INFO] Worker 5: FID 260 (36/64)
+2026-03-31 08:29:52,009 [INFO] Worker 5: FID 260 done, 0 downloads
+2026-03-31 08:29:52,009 [INFO] Worker 5: FID 336 (37/64)
+2026-03-31 08:29:52,262 [INFO] Worker 5: FID 336 done, 0 downloads
+2026-03-31 08:29:52,262 [INFO] Worker 5: FID 337 (38/64)
+2026-03-31 08:31:19,484 [INFO] Worker 5: FID 337 done, 72 downloads
+2026-03-31 08:31:19,485 [INFO] Worker 5: FID 358 (39/64)
+2026-03-31 08:33:00,614 [INFO] Worker 5: FID 358 done, 90 downloads
+2026-03-31 08:33:00,615 [INFO] Worker 5: FID 54 (40/64)
+2026-03-31 08:34:12,423 [INFO] Worker 5: FID 54 done, 68 downloads
+2026-03-31 08:34:12,423 [INFO] Worker 5: FID 53 (41/64)
+2026-03-31 08:36:21,193 [INFO] Worker 5: FID 53 done, 124 downloads
+2026-03-31 08:36:21,193 [INFO] Worker 5: FID 357 (42/64)
+2026-03-31 08:37:17,361 [INFO] Worker 5: FID 357 done, 54 downloads
+2026-03-31 08:37:17,361 [INFO] Worker 5: FID 46 (43/64)
+2026-03-31 08:41:29,966 [INFO] Worker 5: FID 46 done, 248 downloads
+2026-03-31 08:41:29,966 [INFO] Worker 5: FID 74 (44/64)
+2026-03-31 08:42:40,282 [INFO] Worker 5: FID 74 done, 70 downloads
+2026-03-31 08:42:40,282 [INFO] Worker 5: FID 373 (45/64)
+2026-03-31 08:43:14,942 [INFO] Worker 5: FID 373 done, 34 downloads
+2026-03-31 08:43:14,942 [INFO] Worker 5: FID 67 (46/64)
+2026-03-31 08:44:25,985 [INFO] Worker 5: FID 67 done, 70 downloads
+2026-03-31 08:44:25,985 [INFO] Worker 5: FID 344 (47/64)
+2026-03-31 08:46:55,884 [INFO] Worker 5: FID 344 done, 152 downloads
+2026-03-31 08:46:55,884 [INFO] Worker 5: FID 7 (48/64)
+2026-03-31 08:48:12,770 [INFO] Worker 5: FID 7 done, 78 downloads
+2026-03-31 08:48:12,770 [INFO] Worker 5: FID 76 (49/64)
+2026-03-31 08:49:15,197 [INFO] Worker 5: FID 76 done, 62 downloads
+2026-03-31 08:49:15,197 [INFO] Worker 5: FID 69 (50/64)
+2026-03-31 08:51:18,129 [INFO] Worker 5: FID 69 done, 124 downloads
+2026-03-31 08:51:18,129 [INFO] Worker 5: FID 265 (51/64)
+2026-03-31 08:51:53,314 [INFO] Worker 5: FID 265 done, 33 downloads
+2026-03-31 08:51:53,314 [INFO] Worker 5: FID 388 (52/64)
+2026-03-31 08:53:51,120 [INFO] Worker 5: FID 388 done, 114 downloads
+2026-03-31 08:53:51,120 [INFO] Worker 5: FID 2 (53/64)
+2026-03-31 09:07:53,802 [INFO] Worker 5: FID 2 done, 850 downloads
+2026-03-31 09:07:53,802 [INFO] Worker 5: FID 364 (54/64)
+2026-03-31 09:08:35,367 [INFO] Worker 5: FID 364 done, 39 downloads
+2026-03-31 09:08:35,367 [INFO] Worker 5: FID 368 (55/64)
+2026-03-31 09:10:23,666 [INFO] Worker 5: FID 368 done, 111 downloads
+2026-03-31 09:10:23,667 [INFO] Worker 5: FID 85 (56/64)
+2026-03-31 09:14:12,873 [INFO] Worker 5: FID 85 done, 224 downloads
+2026-03-31 09:14:12,873 [INFO] Worker 5: FID 88 (57/64)
+2026-03-31 09:14:52,709 [INFO] Worker 5: FID 88 done, 38 downloads
+2026-03-31 09:14:52,709 [INFO] Worker 5: FID 343 (58/64)
+2026-03-31 09:16:01,229 [INFO] Worker 5: FID 343 done, 66 downloads
+2026-03-31 09:16:01,230 [INFO] Worker 5: FID 30 (59/64)
+2026-03-31 09:16:55,936 [INFO] Worker 5: FID 30 done, 62 downloads
+2026-03-31 09:16:55,936 [INFO] Worker 5: FID 10 (60/64)
+2026-03-31 09:18:18,068 [INFO] Worker 5: FID 10 done, 78 downloads
+2026-03-31 09:18:18,068 [INFO] Worker 5: FID 15 (61/64)
+2026-03-31 09:19:38,211 [INFO] Worker 5: FID 15 done, 78 downloads
+2026-03-31 09:19:38,211 [INFO] Worker 5: FID 36 (62/64)
+2026-03-31 09:20:19,047 [INFO] Worker 5: FID 36 done, 39 downloads
+2026-03-31 09:20:19,047 [INFO] Worker 5: FID 25 (63/64)
+2026-03-31 09:20:59,802 [INFO] Worker 5: FID 25 done, 40 downloads
+2026-03-31 09:20:59,803 [INFO] Worker 5: FID 360 (64/64)
+2026-03-31 09:22:31,558 [INFO] Worker 5: FID 360 done, 88 downloads
+2026-03-31 09:22:31,567 [INFO] Worker 5: finished. 5127 total completed.
