@@ -1620,3 +1620,112 @@
 2026-04-10 23:09:53,232 [INFO] Worker 0: finished. 15671 total completed.
 2026-04-10 23:09:53,309 [INFO] All workers finished. 41145 total completed downloads.
 2026-04-10 23:09:53,309 [INFO] Output: /share/home/e2406749/thesis_tiles
+2026-04-19 11:20:42,457 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 11:20:42,458 [INFO] Tile size: 120x120 px (1200 m footprint)
+2026-04-19 11:20:42,458 [INFO] Output base: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles_120px
+2026-04-19 11:20:42,458 [INFO] Products: ['s2_l2a', 's1_grd']
+2026-04-19 11:20:42,471 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 11:20:42,478 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 11:20:42,484 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 11:20:42,485 [INFO] Merged: 389 FIDs, 12856 unique (fid, image, window) pairs
+2026-04-19 11:20:42,486 [INFO] Filtered to 41 FIDs from data_csv/sample_10pct_stratified.txt
+2026-04-19 11:20:42,486 [INFO] Initializing Google Earth Engine...
+2026-04-19 11:20:44,445 [INFO] DRY RUN: 41 FIDs at 120x120 px
+2026-04-19 11:20:44,446 [INFO]   Products requested: ['s2_l2a', 's1_grd']
+2026-04-19 11:20:44,446 [INFO]   s2_l2a: ~1572 downloads (~23.6 GB)
+2026-04-19 11:20:44,446 [INFO]   s1_grd: ~1697 downloads (~3.4 GB)
+2026-04-19 11:20:44,446 [INFO]   TOTAL new downloads: ~3269
+2026-04-19 11:20:44,446 [INFO]   Already completed: 0
+2026-04-19 11:20:54,802 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 11:20:54,803 [INFO] Tile size: 224x224 px (2240 m footprint)
+2026-04-19 11:20:54,803 [INFO] Output base: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles_224px
+2026-04-19 11:20:54,803 [INFO] Products: ['s2_l2a', 's1_rtc']
+2026-04-19 11:20:54,829 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 11:20:54,836 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 11:20:54,842 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 11:20:54,844 [INFO] Merged: 389 FIDs, 12856 unique (fid, image, window) pairs
+2026-04-19 11:20:54,845 [INFO] Filtered to 41 FIDs from data_csv/sample_10pct_stratified.txt
+2026-04-19 11:20:54,845 [INFO] Initializing Google Earth Engine...
+2026-04-19 11:20:56,142 [INFO] DRY RUN: 41 FIDs at 224x224 px
+2026-04-19 11:20:56,142 [INFO]   Products requested: ['s2_l2a', 's1_rtc']
+2026-04-19 11:20:56,142 [INFO]   s2_l2a: ~1194 downloads (~17.9 GB)
+2026-04-19 11:20:56,142 [INFO]   s1_rtc: ~1293 downloads (~2.6 GB)
+2026-04-19 11:20:56,142 [INFO]   TOTAL new downloads: ~2487
+2026-04-19 11:20:56,142 [INFO]   Already completed: 0
+2026-04-19 11:21:15,883 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 11:21:15,883 [INFO] Tile size: 224x224 px (2240 m footprint)
+2026-04-19 11:21:15,883 [INFO] Output base: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles_224px
+2026-04-19 11:21:15,883 [INFO] Products: ['s2_l2a', 's1_rtc']
+2026-04-19 11:21:15,897 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 11:21:15,909 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 11:21:15,915 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 11:21:15,916 [INFO] Merged: 389 FIDs, 12856 unique (fid, image, window) pairs
+2026-04-19 11:21:15,916 [INFO] Filtered to 41 FIDs from data_csv/sample_10pct_stratified.txt
+2026-04-19 11:21:15,916 [INFO] Initializing Google Earth Engine...
+2026-04-19 11:21:17,384 [INFO] DRY RUN: 41 FIDs at 224x224 px
+2026-04-19 11:21:17,384 [INFO]   Products requested: ['s2_l2a', 's1_rtc']
+2026-04-19 11:21:17,384 [INFO]   s2_l2a: ~1194 downloads (~0.57 MB/tile, ~0.68 GB total)
+2026-04-19 11:21:17,384 [INFO]   s1_rtc: ~1293 downloads (~0.73 MB/tile, ~0.94 GB total)
+2026-04-19 11:21:17,384 [INFO]   TOTAL new downloads: ~2487
+2026-04-19 11:21:17,384 [INFO]   Already completed: 0
+2026-04-19 11:21:34,111 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 11:21:34,111 [INFO] Tile size: 224x224 px (2240 m footprint)
+2026-04-19 11:21:34,111 [INFO] Output base: /tmp/rtc_smoke_224px
+2026-04-19 11:21:34,111 [INFO] Products: ['s1_rtc']
+2026-04-19 11:21:34,125 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 11:21:34,134 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 11:21:34,143 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 11:21:34,144 [INFO] Merged: 389 FIDs, 2159 unique (fid, image, window) pairs
+2026-04-19 11:21:34,144 [INFO] Filtered to 1 requested FIDs
+2026-04-19 11:21:34,145 [INFO] Initializing Google Earth Engine...
+2026-04-19 11:21:35,475 [INFO] Processing FID 3 (1/1)
+2026-04-19 11:21:35,477 [ERROR] FID 3: failed to create image COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83: 'Image' object has no attribute 'mosaic'
+2026-04-19 11:21:35,477 [ERROR] FID 3: failed to create image COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20230109T094936_20230109T095001_046705_05993A_763B: 'Image' object has no attribute 'mosaic'
+2026-04-19 11:21:35,477 [ERROR] FID 3: failed to create image COPERNICUS/S1_GRD/S1A_IW_GRDH_1SDV_20231012T094943_20231012T095008_050730_061CE6_B0FB: 'Image' object has no attribute 'mosaic'
+2026-04-19 11:21:35,477 [INFO] FID 3: 0 new downloads
+2026-04-19 11:21:35,478 [INFO] Pipeline complete. 0 total downloads.
+2026-04-19 11:21:35,478 [INFO] Output: /tmp/rtc_smoke_224px
+2026-04-19 11:26:35,148 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 11:26:35,148 [INFO] Tile size: 224x224 px (2240 m footprint)
+2026-04-19 11:26:35,148 [INFO] Output base: /tmp/rtc_smoke_224px
+2026-04-19 11:26:35,148 [INFO] Products: ['s1_rtc']
+2026-04-19 11:26:35,161 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 11:26:35,169 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 11:26:35,182 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 11:26:35,183 [INFO] Merged: 389 FIDs, 2159 unique (fid, image, window) pairs
+2026-04-19 11:26:35,183 [INFO] Filtered to 1 requested FIDs
+2026-04-19 11:26:35,184 [INFO] Initializing Google Earth Engine...
+2026-04-19 11:26:37,074 [INFO] Processing FID 3 (1/1)
+2026-04-19 11:26:47,670 [INFO] FID 3: 12 new downloads
+2026-04-19 11:26:47,671 [INFO] Pipeline complete. 12 total downloads.
+2026-04-19 11:26:47,671 [INFO] Output: /tmp/rtc_smoke_224px
+2026-04-19 11:28:04,979 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 11:28:04,980 [INFO] Tile size: 224x224 px (2240 m footprint)
+2026-04-19 11:28:04,980 [INFO] Output base: /tmp/rtc_smoke_224px
+2026-04-19 11:28:04,980 [INFO] Products: ['s1_rtc']
+2026-04-19 11:28:04,992 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 11:28:05,000 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 11:28:05,013 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 11:28:05,014 [INFO] Merged: 389 FIDs, 2159 unique (fid, image, window) pairs
+2026-04-19 11:28:05,014 [INFO] Filtered to 1 requested FIDs
+2026-04-19 11:28:05,015 [INFO] Initializing Google Earth Engine...
+2026-04-19 11:28:06,830 [INFO] Processing FID 3 (1/1)
+2026-04-19 11:28:15,634 [INFO] FID 3: 12 new downloads
+2026-04-19 11:28:15,636 [INFO] Pipeline complete. 12 total downloads.
+2026-04-19 11:28:15,636 [INFO] Output: /tmp/rtc_smoke_224px
+2026-04-19 16:11:00,212 [WARNING] CPLE_AppDefined in pipeline_flat.tif: TIFFReadDirectory:Sum of Photometric type-related color channels and ExtraSamples doesn't match SamplesPerPixel. Defining non-color channels as ExtraSamples.
+2026-04-19 16:11:00,229 [WARNING] CPLE_AppDefined in TIFFReadDirectory:Sum of Photometric type-related color channels and ExtraSamples doesn't match SamplesPerPixel. Defining non-color channels as ExtraSamples.
+2026-04-19 16:11:40,962 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-04-19 16:11:40,962 [INFO] Tile size: 224x224 px (2240 m footprint)
+2026-04-19 16:11:40,962 [INFO] Output base: /tmp/rtc_smoke_224px
+2026-04-19 16:11:40,962 [INFO] Products: ['s1_rtc']
+2026-04-19 16:11:40,985 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 16:11:40,992 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 16:11:41,007 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 16:11:41,009 [INFO] Merged: 389 FIDs, 2159 unique (fid, image, window) pairs
+2026-04-19 16:11:41,010 [INFO] Filtered to 1 requested FIDs
+2026-04-19 16:11:41,011 [INFO] Initializing Google Earth Engine...
+2026-04-19 16:11:42,768 [INFO] Processing FID 3 (1/1)
+2026-04-19 16:12:01,163 [INFO] FID 3: 12 new downloads
+2026-04-19 16:12:01,165 [INFO] Pipeline complete. 12 total downloads.
+2026-04-19 16:12:01,165 [INFO] Output: /tmp/rtc_smoke_224px
