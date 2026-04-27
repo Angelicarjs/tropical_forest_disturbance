@@ -1,0 +1,48 @@
+2026-04-19 16:50:30,846 [INFO] Worker 4: starting with 7 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:32,587 [INFO] Worker 4: FID 218 (1/7)
+2026-04-19 16:50:39,839 [INFO] Worker 4: FID 218 done, 6 downloads
+2026-04-19 16:50:39,840 [INFO] Worker 4: FID 3 (2/7)
+2026-04-19 16:56:29,466 [INFO] Worker 4: FID 3 done, 322 downloads
+2026-04-19 16:56:29,468 [INFO] Worker 4: FID 153 (3/7)
+2026-04-19 16:57:39,952 [INFO] Worker 4: FID 153 done, 56 downloads
+2026-04-19 16:57:39,954 [INFO] Worker 4: FID 324 (4/7)
+2026-04-19 16:58:50,586 [INFO] Worker 4: FID 324 done, 70 downloads
+2026-04-19 16:58:50,588 [INFO] Worker 4: FID 364 (5/7)
+2026-04-19 16:59:42,386 [INFO] Worker 4: FID 364 done, 47 downloads
+2026-04-19 16:59:42,389 [INFO] Worker 4: FID 281 (6/7)
+2026-04-19 17:00:13,156 [INFO] Worker 4: FID 281 done, 26 downloads
+2026-04-19 17:00:13,159 [INFO] Worker 4: FID 384 (7/7)
+2026-04-19 17:09:25,645 [INFO] Worker 4: FID 384 done, 528 downloads
+2026-04-19 17:09:25,652 [INFO] Worker 4: finished. 1055 total completed.
+2026-04-19 17:29:53,013 [INFO] Worker 4: starting with 7 FIDs, products: ['s2_l2a', 's1_rtc'], tile_size: 224px
+2026-04-19 17:29:54,840 [INFO] Worker 4: FID 218 (1/7)
+2026-04-19 17:30:01,179 [INFO] Worker 4: FID 218 done, 6 downloads
+2026-04-19 17:30:01,180 [INFO] Worker 4: FID 3 (2/7)
+2026-04-19 17:34:22,497 [INFO] Worker 4: FID 3 done, 184 downloads
+2026-04-19 17:34:22,499 [INFO] Worker 4: FID 153 (3/7)
+2026-04-19 17:34:59,702 [INFO] Worker 4: FID 153 done, 28 downloads
+2026-04-19 17:34:59,704 [INFO] Worker 4: FID 324 (4/7)
+2026-04-19 17:35:46,986 [INFO] Worker 4: FID 324 done, 35 downloads
+2026-04-19 17:35:46,988 [INFO] Worker 4: FID 364 (5/7)
+2026-04-19 17:36:51,382 [INFO] Worker 4: FID 364 done, 47 downloads
+2026-04-19 17:36:51,384 [INFO] Worker 4: FID 281 (6/7)
+2026-04-19 17:37:50,882 [INFO] Worker 4: FID 281 done, 52 downloads
+2026-04-19 17:37:50,884 [INFO] Worker 4: FID 384 (7/7)
+2026-04-19 17:44:22,867 [INFO] Worker 4: FID 384 done, 288 downloads
+2026-04-19 17:44:22,873 [INFO] Worker 4: finished. 640 total completed.
+2026-04-19 21:38:10,407 [INFO] Worker 4: starting with 7 FIDs, products: ['s2_l2a', 's1_rtc'], tile_size: 256px
+2026-04-19 21:38:11,886 [INFO] Worker 4: FID 218 (1/7)
+2026-04-19 21:38:17,325 [INFO] Worker 4: FID 218 done, 6 downloads
+2026-04-19 21:38:17,326 [INFO] Worker 4: FID 3 (2/7)
+2026-04-19 21:44:01,314 [INFO] Worker 4: FID 3 done, 230 downloads
+2026-04-19 21:44:01,316 [INFO] Worker 4: FID 153 (3/7)
+2026-04-19 21:44:41,173 [INFO] Worker 4: FID 153 done, 28 downloads
+2026-04-19 21:44:41,175 [INFO] Worker 4: FID 324 (4/7)
+2026-04-19 21:45:30,621 [INFO] Worker 4: FID 324 done, 35 downloads
+2026-04-19 21:45:30,623 [INFO] Worker 4: FID 364 (5/7)
+2026-04-19 21:46:28,141 [INFO] Worker 4: FID 364 done, 47 downloads
+2026-04-19 21:46:28,143 [INFO] Worker 4: FID 281 (6/7)
+2026-04-19 21:47:27,183 [INFO] Worker 4: FID 281 done, 52 downloads
+2026-04-19 21:47:27,185 [INFO] Worker 4: FID 384 (7/7)
+2026-04-19 21:52:13,305 [INFO] Worker 4: FID 384 done, 192 downloads
+2026-04-19 21:52:13,311 [INFO] Worker 4: finished. 590 total completed.

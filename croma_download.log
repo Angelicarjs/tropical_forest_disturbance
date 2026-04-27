@@ -1,0 +1,112 @@
+2026-04-19 16:50:30,762 [INFO] Parsing CSVs from: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-04-19 16:50:30,762 [INFO] Tile size: 120x120 px (1200 m footprint)
+2026-04-19 16:50:30,762 [INFO] Output base: /share/home/e2406749/thesis_tiles_120px
+2026-04-19 16:50:30,762 [INFO] Products: ['s2_l2a', 's1_grd']
+2026-04-19 16:50:30,792 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-04-19 16:50:30,806 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-04-19 16:50:30,820 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-04-19 16:50:30,821 [INFO] Merged: 389 FIDs, 12856 unique (fid, image, window) pairs
+2026-04-19 16:50:30,823 [INFO] Filtered to 41 FIDs from data_csv/sample_10pct_stratified.txt
+2026-04-19 16:50:30,823 [INFO] Launching 6 parallel workers for 41 FIDs
+2026-04-19 16:50:30,823 [INFO]   Worker 0: 7 FIDs
+2026-04-19 16:50:30,823 [INFO]   Worker 1: 7 FIDs
+2026-04-19 16:50:30,823 [INFO]   Worker 2: 7 FIDs
+2026-04-19 16:50:30,823 [INFO]   Worker 3: 7 FIDs
+2026-04-19 16:50:30,823 [INFO]   Worker 4: 7 FIDs
+2026-04-19 16:50:30,823 [INFO]   Worker 5: 6 FIDs
+2026-04-19 16:50:30,845 [INFO] Worker 0: starting with 7 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:30,845 [INFO] Worker 1: starting with 7 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:30,846 [INFO] Worker 2: starting with 7 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:30,846 [INFO] Worker 3: starting with 7 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:30,846 [INFO] Worker 4: starting with 7 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:30,846 [INFO] Worker 5: starting with 6 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-04-19 16:50:32,114 [INFO] Worker 3: FID 30 (1/7)
+2026-04-19 16:50:32,545 [INFO] Worker 2: FID 271 (1/7)
+2026-04-19 16:50:32,546 [INFO] Worker 0: FID 270 (1/7)
+2026-04-19 16:50:32,587 [INFO] Worker 4: FID 218 (1/7)
+2026-04-19 16:50:32,601 [INFO] Worker 5: FID 23 (1/6)
+2026-04-19 16:50:32,633 [INFO] Worker 1: FID 93 (1/7)
+2026-04-19 16:50:39,839 [INFO] Worker 4: FID 218 done, 6 downloads
+2026-04-19 16:50:39,840 [INFO] Worker 4: FID 3 (2/7)
+2026-04-19 16:50:42,076 [INFO] Worker 0: FID 270 done, 7 downloads
+2026-04-19 16:50:42,078 [INFO] Worker 0: FID 27 (2/7)
+2026-04-19 16:50:52,377 [INFO] Worker 1: FID 93 done, 18 downloads
+2026-04-19 16:50:52,379 [INFO] Worker 1: FID 334 (2/7)
+2026-04-19 16:51:08,309 [INFO] Worker 2: FID 271 done, 32 downloads
+2026-04-19 16:51:08,310 [INFO] Worker 2: FID 228 (2/7)
+2026-04-19 16:51:33,183 [INFO] Worker 5: FID 23 done, 47 downloads
+2026-04-19 16:51:33,184 [INFO] Worker 5: FID 354 (2/6)
+2026-04-19 16:51:45,918 [INFO] Worker 1: FID 334 done, 44 downloads
+2026-04-19 16:51:45,920 [INFO] Worker 1: FID 29 (3/7)
+2026-04-19 16:51:47,016 [INFO] Worker 3: FID 30 done, 70 downloads
+2026-04-19 16:51:47,018 [INFO] Worker 3: FID 125 (2/7)
+2026-04-19 16:52:01,293 [INFO] Worker 2: FID 228 done, 45 downloads
+2026-04-19 16:52:01,294 [INFO] Worker 2: FID 92 (3/7)
+2026-04-19 16:52:29,121 [INFO] Worker 5: FID 354 done, 45 downloads
+2026-04-19 16:52:29,123 [INFO] Worker 5: FID 224 (3/6)
+2026-04-19 16:52:41,646 [INFO] Worker 2: FID 92 done, 36 downloads
+2026-04-19 16:52:41,648 [INFO] Worker 2: FID 248 (4/7)
+2026-04-19 16:53:15,193 [INFO] Worker 3: FID 125 done, 78 downloads
+2026-04-19 16:53:15,195 [INFO] Worker 3: FID 161 (3/7)
+2026-04-19 16:53:30,862 [INFO] Worker 5: FID 224 done, 69 downloads
+2026-04-19 16:53:30,864 [INFO] Worker 5: FID 71 (4/6)
+2026-04-19 16:53:40,970 [INFO] Worker 3: FID 161 done, 21 downloads
+2026-04-19 16:53:40,972 [INFO] Worker 3: FID 315 (4/7)
+2026-04-19 16:53:44,491 [INFO] Worker 2: FID 248 done, 56 downloads
+2026-04-19 16:53:44,493 [INFO] Worker 2: FID 234 (5/7)
+2026-04-19 16:54:15,135 [INFO] Worker 0: FID 27 done, 188 downloads
+2026-04-19 16:54:15,137 [INFO] Worker 0: FID 13 (3/7)
+2026-04-19 16:54:32,565 [INFO] Worker 2: FID 234 done, 42 downloads
+2026-04-19 16:54:32,567 [INFO] Worker 2: FID 320 (6/7)
+2026-04-19 16:54:53,689 [INFO] Worker 3: FID 315 done, 68 downloads
+2026-04-19 16:54:53,691 [INFO] Worker 3: FID 346 (5/7)
+2026-04-19 16:54:56,744 [INFO] Worker 5: FID 71 done, 82 downloads
+2026-04-19 16:54:56,746 [INFO] Worker 5: FID 363 (5/6)
+2026-04-19 16:55:35,589 [INFO] Worker 3: FID 346 done, 41 downloads
+2026-04-19 16:55:35,591 [INFO] Worker 3: FID 387 (6/7)
+2026-04-19 16:55:41,080 [INFO] Worker 2: FID 320 done, 66 downloads
+2026-04-19 16:55:41,082 [INFO] Worker 2: FID 115 (7/7)
+2026-04-19 16:55:52,405 [INFO] Worker 0: FID 13 done, 90 downloads
+2026-04-19 16:55:52,407 [INFO] Worker 0: FID 156 (4/7)
+2026-04-19 16:56:29,466 [INFO] Worker 4: FID 3 done, 322 downloads
+2026-04-19 16:56:29,468 [INFO] Worker 4: FID 153 (3/7)
+2026-04-19 16:56:40,153 [INFO] Worker 1: FID 29 done, 282 downloads
+2026-04-19 16:56:40,156 [INFO] Worker 1: FID 231 (4/7)
+2026-04-19 16:56:54,216 [INFO] Worker 0: FID 156 done, 56 downloads
+2026-04-19 16:56:54,218 [INFO] Worker 0: FID 166 (5/7)
+2026-04-19 16:56:55,914 [INFO] Worker 3: FID 387 done, 78 downloads
+2026-04-19 16:56:55,916 [INFO] Worker 3: FID 116 (7/7)
+2026-04-19 16:56:56,094 [INFO] Worker 2: FID 115 done, 72 downloads
+2026-04-19 16:56:56,098 [INFO] Worker 2: finished. 349 total completed.
+2026-04-19 16:57:26,934 [INFO] Worker 3: FID 116 done, 29 downloads
+2026-04-19 16:57:26,938 [INFO] Worker 3: finished. 385 total completed.
+2026-04-19 16:57:39,952 [INFO] Worker 4: FID 153 done, 56 downloads
+2026-04-19 16:57:39,954 [INFO] Worker 4: FID 324 (4/7)
+2026-04-19 16:57:41,662 [INFO] Worker 1: FID 231 done, 60 downloads
+2026-04-19 16:57:41,665 [INFO] Worker 1: FID 165 (5/7)
+2026-04-19 16:57:44,782 [INFO] Worker 0: FID 166 done, 51 downloads
+2026-04-19 16:57:44,784 [INFO] Worker 0: FID 101 (6/7)
+2026-04-19 16:57:58,409 [INFO] Worker 1: FID 165 done, 17 downloads
+2026-04-19 16:57:58,412 [INFO] Worker 1: FID 112 (6/7)
+2026-04-19 16:58:03,053 [INFO] Worker 0: FID 101 done, 19 downloads
+2026-04-19 16:58:03,055 [INFO] Worker 0: FID 113 (7/7)
+2026-04-19 16:58:21,177 [INFO] Worker 5: FID 363 done, 192 downloads
+2026-04-19 16:58:21,179 [INFO] Worker 5: FID 240 (6/6)
+2026-04-19 16:58:44,184 [INFO] Worker 1: FID 112 done, 44 downloads
+2026-04-19 16:58:44,186 [INFO] Worker 1: FID 180 (7/7)
+2026-04-19 16:58:50,586 [INFO] Worker 4: FID 324 done, 70 downloads
+2026-04-19 16:58:50,588 [INFO] Worker 4: FID 364 (5/7)
+2026-04-19 16:59:12,479 [INFO] Worker 5: FID 240 done, 50 downloads
+2026-04-19 16:59:12,483 [INFO] Worker 5: finished. 485 total completed.
+2026-04-19 16:59:15,113 [INFO] Worker 1: FID 180 done, 27 downloads
+2026-04-19 16:59:15,118 [INFO] Worker 1: finished. 492 total completed.
+2026-04-19 16:59:42,386 [INFO] Worker 4: FID 364 done, 47 downloads
+2026-04-19 16:59:42,389 [INFO] Worker 4: FID 281 (6/7)
+2026-04-19 16:59:44,057 [INFO] Worker 0: FID 113 done, 92 downloads
+2026-04-19 16:59:44,062 [INFO] Worker 0: finished. 503 total completed.
+2026-04-19 17:00:13,156 [INFO] Worker 4: FID 281 done, 26 downloads
+2026-04-19 17:00:13,159 [INFO] Worker 4: FID 384 (7/7)
+2026-04-19 17:09:25,645 [INFO] Worker 4: FID 384 done, 528 downloads
+2026-04-19 17:09:25,652 [INFO] Worker 4: finished. 1055 total completed.
+2026-04-19 17:09:25,678 [INFO] All workers finished. 3269 total completed downloads.
+2026-04-19 17:09:25,678 [INFO] Output: /share/home/e2406749/thesis_tiles_120px
