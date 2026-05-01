@@ -223,7 +223,7 @@ def find_paired_tiles(fid_dir):
         # For each S2 tile, find the closest S1 tile acquired BEFORE (or same day)
         for s2_id, s2_date, s2_path in s2_list:
             best_s1 = None
-            best_gap = None
+            best_gap = None #6
             for s1_id, s1_date, s1_path in s1_list:
                 if (evt_bef, tile_idx, s1_id) in paired_s1:
                     continue  # already used by another S2 tile
