@@ -73,12 +73,8 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_CSV_DIR = os.path.join(_SCRIPT_DIR, "data_csv")
 DEFAULT_FID_LIST = os.path.join(DEFAULT_CSV_DIR, "sample_10pct_stratified.txt")
 
-# Cluster vs local auto-detect (matches tile_pipeline.py convention).
 # Per-size base becomes f"{DEFAULT_OUTPUT_BASE}_{size}px".
-if os.path.exists(os.path.expanduser("~/thesis_scripts")):
-    DEFAULT_OUTPUT_BASE = os.path.expanduser("~/thesis_tiles")
-else:
-    DEFAULT_OUTPUT_BASE = "/Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles"
+DEFAULT_OUTPUT_BASE = os.path.expanduser("~/thesis_tiles")
 
 PRODUCT_NAME = "s1_rtc_mpc"
 
