@@ -2,10 +2,15 @@
 """
 Download Sentinel-1 RTC tiles from Microsoft Planetary Computer (MPC).
 
-For each row in v1/v2/v3 CSVs and each S1 GRD scene id listed in
-befIdsS1 / evtIdsS1 / aftIdsS1, fetches the matching RTC item from MPC
-and writes a tile centered on the polygon centroid at one or more
-output sizes (default: 224 and 256 px @ 10 m).
+Same tiling logic as tile_pipeline.py:
+- Polygon projected to EPSG:3857
+- Tile grid: tile_size_m = size_px * 10, snapped to multiples of tile_size_m
+  from the projection origin; keep tiles that intersect the polygon
+- Output written in EPSG:3857 at 10 m, so RTC tiles align pixel-for-pixel
+  with the existing GRD / S2 tiles produced by tile_pipeline.py
+
+Each (fid, window, scene) may produce 1+ tiles per size depending on
+polygon footprint vs tile size.
 
 The three CSVs are merged and (fid, window, scene_id) tuples are
 deduplicated, matching the existing pipeline's convention.
@@ -17,15 +22,17 @@ GRD scene id → RTC item id mapping on MPC:
 Fallback when the derived id is not found: STAC search by
 sat:absolute_orbit + acquisition date (parsed from the GRD id itself).
 
-Output structure (sibling to existing s1_rtc/ to avoid touching manual tiles):
+Output structure (matches tile_pipeline.py layout, sibling to existing s1_rtc/):
     {output}_{size}px/
     └── s1_rtc_mpc/
         └── fid_{fid}/
             └── {window}/
-                └── {scene_id}.tif    (2 bands: VV, VH, UTM 10 m)
+                └── {scene_id}/
+                    ├── tile_0.tif    (2 bands: VV, VH, EPSG:3857 @ 10 m)
+                    └── tile_1.tif    (only if polygon spans more than one grid cell)
 
 Required packages (install in your env):
-    pip install planetary-computer pystac-client rasterio shapely pyproj numpy
+    pip install planetary-computer pystac-client rasterio shapely pyproj
 
 Default FID filter: data_csv/sample_10pct_stratified.txt (the 10% stratified
 sample). Pass --all-fids to disable filtering and process the full dataset.
@@ -40,19 +47,20 @@ import argparse
 import csv
 import json
 import logging
+import math
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
-import numpy as np
 import planetary_computer
 import pystac_client
 import rasterio
-from pyproj import CRS, Transformer
+from pyproj import Transformer
 from rasterio.transform import from_origin
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import Resampling
-from shapely.geometry import shape
+from shapely.geometry import box, shape
+from shapely.ops import transform as shapely_transform
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Configuration
@@ -62,6 +70,7 @@ MPC_STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 COLLECTION = "sentinel-1-rtc"
 BANDS = ["vv", "vh"]
 RESOLUTION_M = 10
+CRS_OUT = "EPSG:3857"
 
 WINDOW_COLUMNS = {
     "bef": "befIdsS1",
@@ -74,7 +83,7 @@ DEFAULT_CSV_DIR = os.path.join(_SCRIPT_DIR, "data_csv")
 DEFAULT_FID_LIST = os.path.join(DEFAULT_CSV_DIR, "sample_10pct_stratified.txt")
 
 # Per-size base becomes f"{DEFAULT_OUTPUT_BASE}_{size}px".
-DEFAULT_OUTPUT_BASE = os.path.expanduser("~/thesis_tiles")
+DEFAULT_OUTPUT_BASE = "/share/castor/home/e2406749/thesis_tiles"
 
 PRODUCT_NAME = "s1_rtc_mpc"
 
@@ -107,17 +116,41 @@ def parse_grd_id(grd_id: str):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# UTM helper
+# Coordinate / grid helpers (same logic as tile_pipeline.py)
 # ──────────────────────────────────────────────────────────────────────────────
 
-def utm_crs_for_lonlat(lon: float, lat: float) -> CRS:
-    zone = int((lon + 180) // 6) + 1
-    epsg = (32600 if lat >= 0 else 32700) + zone
-    return CRS.from_epsg(epsg)
+_transformer_4326_to_3857 = Transformer.from_crs(
+    "EPSG:4326", "EPSG:3857", always_xy=True
+)
+
+
+def project_to_3857(geom_4326):
+    return shapely_transform(_transformer_4326_to_3857.transform, geom_4326)
+
+
+def create_tile_grid(polygon_3857, tile_size_m):
+    """Grid of tile_size_m × tile_size_m boxes (EPSG:3857) intersecting the polygon."""
+    minx, miny, maxx, maxy = polygon_3857.bounds
+    grid_minx = math.floor(minx / tile_size_m) * tile_size_m
+    grid_miny = math.floor(miny / tile_size_m) * tile_size_m
+    grid_maxx = math.ceil(maxx / tile_size_m) * tile_size_m
+    grid_maxy = math.ceil(maxy / tile_size_m) * tile_size_m
+
+    tiles = []
+    x = grid_minx
+    while x < grid_maxx:
+        y = grid_miny
+        while y < grid_maxy:
+            tile = box(x, y, x + tile_size_m, y + tile_size_m)
+            if tile.intersects(polygon_3857):
+                tiles.append(tile)
+            y += tile_size_m
+        x += tile_size_m
+    return tiles
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CSV iteration (no dedup, row-by-row)
+# CSV iteration
 # ──────────────────────────────────────────────────────────────────────────────
 
 def load_fid_list(path):
@@ -138,8 +171,6 @@ def iter_rows(csv_dir, csv_files, fid_filter=None):
 
     Iterates over all CSVs in order; first occurrence wins. This matches the
     existing pipeline's convention of merging v1/v2/v3 to avoid duplicate downloads.
-
-    If fid_filter is a set, only rows whose fid is in the set are yielded.
     """
     seen = set()
     for csv_name in csv_files:
@@ -220,91 +251,66 @@ def get_rtc_item(catalog, grd_id):
 # Tile download
 # ──────────────────────────────────────────────────────────────────────────────
 
-def write_tiles(item, polygon_4326, sizes, out_paths):
-    """Read bands once at max size, then center-crop to each requested size."""
-    centroid = polygon_4326.centroid
-    utm = utm_crs_for_lonlat(centroid.x, centroid.y)
-    transformer = Transformer.from_crs("EPSG:4326", utm, always_xy=True)
-    cx, cy = transformer.transform(centroid.x, centroid.y)
-
-    max_size = max(sizes)
-    half = max_size * RESOLUTION_M / 2
-    minx, miny = cx - half, cy - half
-    maxx, maxy = cx + half, cy + half
-    transform_max = from_origin(minx, maxy, RESOLUTION_M, RESOLUTION_M)
-
-    band_arrays = []
-    nodata_val = None
-    dtype = None
-    for band in BANDS:
-        href = item.assets[band].href
-        with rasterio.open(href) as src:
-            if nodata_val is None:
-                nodata_val = src.nodata
-                dtype = src.dtypes[0]
-            with WarpedVRT(
-                src,
-                crs=utm,
-                transform=transform_max,
-                width=max_size,
-                height=max_size,
-                resampling=Resampling.bilinear,
-            ) as vrt:
-                band_arrays.append(vrt.read(1))
-
-    stack = np.stack(band_arrays, axis=0)
-
-    written = {}
-    for size in sizes:
-        out_path = out_paths[size]
-        if size == max_size:
-            arr = stack
-            t = transform_max
-        else:
-            offset = (max_size - size) // 2
-            arr = stack[:, offset:offset + size, offset:offset + size]
-            t = from_origin(
-                minx + offset * RESOLUTION_M,
-                maxy - offset * RESOLUTION_M,
-                RESOLUTION_M,
-                RESOLUTION_M,
-            )
-
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        with rasterio.open(
-            out_path, "w",
-            driver="GTiff",
-            height=size, width=size,
-            count=len(BANDS),
-            dtype=dtype,
-            crs=utm,
-            transform=t,
-            compress="deflate",
-            nodata=nodata_val,
-        ) as dst:
-            dst.write(arr)
-            dst.descriptions = tuple(b.upper() for b in BANDS)
-        written[size] = True
-
-    return written
-
-
-def out_path(output_base, size, fid, window, scene_id):
-    """{output_base}_{size}px/s1_rtc_mpc/fid_{fid}/{window}/{scene_id}.tif"""
+def out_path(output_base, size, fid, window, scene_id, tile_idx):
+    """{base}_{size}px/s1_rtc_mpc/fid_{fid}/{window}/{scene_id}/tile_{idx}.tif"""
     return os.path.join(
         f"{output_base.rstrip('/')}_{size}px",
         PRODUCT_NAME,
         f"fid_{fid}",
         window,
-        f"{scene_id}.tif",
+        scene_id.replace("/", "_"),
+        f"tile_{tile_idx}.tif",
     )
 
 
+def write_one_tile(src_handles, tile_bounds_3857, size_px, path, nodata, dtype):
+    """Write a single size_px × size_px tile from open band sources."""
+    minx, _miny, _maxx, maxy = tile_bounds_3857
+    transform = from_origin(minx, maxy, RESOLUTION_M, RESOLUTION_M)
+
+    arrays = []
+    for src in src_handles:
+        with WarpedVRT(
+            src,
+            crs=CRS_OUT,
+            transform=transform,
+            width=size_px,
+            height=size_px,
+            resampling=Resampling.bilinear,
+        ) as vrt:
+            arrays.append(vrt.read(1))
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with rasterio.open(
+        path, "w",
+        driver="GTiff",
+        height=size_px, width=size_px,
+        count=len(BANDS),
+        dtype=dtype,
+        crs=CRS_OUT,
+        transform=transform,
+        compress="deflate",
+        nodata=nodata,
+    ) as dst:
+        for i, arr in enumerate(arrays):
+            dst.write(arr, i + 1)
+        dst.descriptions = tuple(b.upper() for b in BANDS)
+
+
 def process_task(catalog, output_base, sizes, fid, geometry, window, scene_id):
-    """Download tiles for one (fid × window × scene). Returns # written."""
-    out_paths = {s: out_path(output_base, s, fid, window, scene_id) for s in sizes}
-    pending = {s: p for s, p in out_paths.items() if not os.path.exists(p)}
-    if not pending:
+    """For one (fid × window × scene), write all grid tiles for all sizes."""
+    polygon_3857 = project_to_3857(shape(geometry))
+
+    # Build list of pending writes: one entry per (size, tile_idx) not on disk
+    todo = []  # (size_px, tile_idx, tile_bounds, out_path)
+    for size in sizes:
+        grid = create_tile_grid(polygon_3857, size * RESOLUTION_M)
+        for tile_idx, tile in enumerate(grid):
+            p = out_path(output_base, size, fid, window, scene_id, tile_idx)
+            if not os.path.exists(p):
+                todo.append((size, tile_idx, tile.bounds, p))
+
+    if not todo:
         return 0
 
     item = get_rtc_item(catalog, scene_id)
@@ -312,13 +318,28 @@ def process_task(catalog, output_base, sizes, fid, geometry, window, scene_id):
         logger.warning(f"No RTC for {scene_id} (fid={fid} {window})")
         return 0
 
+    # Open both band COGs once for the whole scene
+    src_handles = []
+    written = 0
     try:
-        polygon = shape(geometry)
-        results = write_tiles(item, polygon, list(pending.keys()), pending)
-        return sum(1 for v in results.values() if v)
-    except Exception as e:
-        logger.error(f"Write failed for {scene_id} (fid={fid} {window}): {e}")
-        return 0
+        for band in BANDS:
+            src_handles.append(rasterio.open(item.assets[band].href))
+        nodata = src_handles[0].nodata
+        dtype = src_handles[0].dtypes[0]
+
+        for size_px, tile_idx, bounds, path in todo:
+            try:
+                write_one_tile(src_handles, bounds, size_px, path, nodata, dtype)
+                written += 1
+            except Exception as e:
+                logger.error(f"Tile write failed {path}: {e}")
+    finally:
+        for src in src_handles:
+            try:
+                src.close()
+            except Exception:
+                pass
+    return written
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -361,20 +382,28 @@ def main():
     logger.info(f"FID filter: {len(fid_filter) if fid_filter else 'disabled (all FIDs)'}")
 
     tasks = list(iter_rows(args.csv_dir, csv_files, fid_filter))
-    logger.info(f"Total tasks (row × window × scene): {len(tasks)}")
+    logger.info(f"Total scenes (fid × window × scene): {len(tasks)}")
 
     if args.limit:
         tasks = tasks[: args.limit]
-        logger.info(f"Limited to {len(tasks)} tasks")
+        logger.info(f"Limited to {len(tasks)} scenes")
 
     if args.dry_run:
         existing = pending = 0
+        per_size = {s: 0 for s in args.sizes}
         for fid, geometry, window, scene_id in tasks:
+            polygon_3857 = project_to_3857(shape(geometry))
             for size in args.sizes:
-                if os.path.exists(out_path(args.output, size, fid, window, scene_id)):
-                    existing += 1
-                else:
-                    pending += 1
+                grid = create_tile_grid(polygon_3857, size * RESOLUTION_M)
+                per_size[size] += len(grid)
+                for tile_idx in range(len(grid)):
+                    p = out_path(args.output, size, fid, window, scene_id, tile_idx)
+                    if os.path.exists(p):
+                        existing += 1
+                    else:
+                        pending += 1
+        for s, c in per_size.items():
+            logger.info(f"  {s}px: {c} tiles total ({c / max(1, len(tasks)):.2f} per scene)")
         logger.info(f"DRY RUN: {pending} tiles to download, {existing} already exist")
         return
 
@@ -395,7 +424,7 @@ def main():
                     logger.error(f"Task error: {e}")
                     failed += 1
                 if (i + 1) % 50 == 0:
-                    logger.info(f"Progress: {i + 1}/{len(futures)} tasks")
+                    logger.info(f"Progress: {i + 1}/{len(futures)} scenes")
     else:
         for i, (fid, geometry, window, scene_id) in enumerate(tasks):
             try:
@@ -407,9 +436,9 @@ def main():
                 logger.error(f"Task error: {e}")
                 failed += 1
             if (i + 1) % 50 == 0:
-                logger.info(f"Progress: {i + 1}/{len(tasks)} tasks")
+                logger.info(f"Progress: {i + 1}/{len(tasks)} scenes")
 
-    logger.info(f"Done. {completed} tiles written, {failed} task errors.")
+    logger.info(f"Done. {completed} tiles written, {failed} scene errors.")
 
 
 if __name__ == "__main__":
