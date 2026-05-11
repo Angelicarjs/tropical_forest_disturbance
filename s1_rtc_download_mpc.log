@@ -1,0 +1,87 @@
+2026-05-06 17:35:29,094 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-06 17:35:29,094 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-06 17:35:29,094 [INFO] Output: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles
+2026-05-06 17:35:29,094 [INFO] Sizes: [224, 256]
+2026-05-06 17:35:29,094 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-06 17:35:29,094 [INFO] FID filter: 41
+2026-05-06 17:35:29,150 [INFO] Total tasks (row × window × scene): 645
+2026-05-06 17:35:29,156 [INFO] DRY RUN: 1290 tiles to download, 0 already exist
+2026-05-06 17:40:30,823 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-06 17:40:30,823 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-06 17:40:30,823 [INFO] Output: /share/home/e2406749/thesis_tiles
+2026-05-06 17:40:30,823 [INFO] Sizes: [224, 256]
+2026-05-06 17:40:30,823 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-06 17:40:30,823 [INFO] FID filter: 41
+2026-05-06 17:40:30,869 [INFO] Total tasks (row × window × scene): 645
+2026-05-06 17:40:30,876 [INFO] DRY RUN: 1290 tiles to download, 0 already exist
+2026-05-06 17:45:05,833 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-06 17:45:05,833 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-06 17:45:05,834 [INFO] Output: /share/castor/home/e2406749/thesis_tiles
+2026-05-06 17:45:05,834 [INFO] Sizes: [224, 256]
+2026-05-06 17:45:05,834 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-06 17:45:05,834 [INFO] FID filter: 41
+2026-05-06 17:45:05,880 [INFO] Total tasks (row × window × scene): 645
+2026-05-06 17:45:05,887 [INFO] DRY RUN: 1290 tiles to download, 0 already exist
+2026-05-06 17:45:57,262 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-06 17:45:57,263 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-06 17:45:57,263 [INFO] Output: /share/castor/home/e2406749/thesis_tiles
+2026-05-06 17:45:57,263 [INFO] Sizes: [224, 256]
+2026-05-06 17:45:57,263 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-06 17:45:57,263 [INFO] FID filter: 41
+2026-05-06 17:45:57,304 [INFO] Total tasks (row × window × scene): 645
+2026-05-06 17:45:57,304 [INFO] Limited to 3 tasks
+2026-05-06 17:46:01,372 [INFO] Done. 6 tiles written, 0 task errors.
+2026-05-07 12:38:42,085 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-07 12:38:42,085 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-07 12:38:42,085 [INFO] Output: /share/castor/home/e2406749/thesis_tiles
+2026-05-07 12:38:42,085 [INFO] Sizes: [224, 256]
+2026-05-07 12:38:42,085 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-07 12:38:42,085 [INFO] FID filter: 41
+2026-05-07 12:38:42,126 [INFO] Total scenes (fid × window × scene): 645
+2026-05-07 12:38:42,460 [INFO]   224px: 1293 tiles total (2.00 per scene)
+2026-05-07 12:38:42,460 [INFO]   256px: 1168 tiles total (1.81 per scene)
+2026-05-07 12:38:42,460 [INFO] DRY RUN: 2461 tiles to download, 0 already exist
+2026-05-07 12:56:39,752 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-07 12:56:39,752 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-07 12:56:39,753 [INFO] Output: /share/castor/home/e2406749/thesis_tiles
+2026-05-07 12:56:39,753 [INFO] Sizes: [224]
+2026-05-07 12:56:39,753 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-07 12:56:39,753 [INFO] FID filter: 41
+2026-05-07 12:56:39,794 [INFO] Total scenes (fid × window × scene): 645
+2026-05-07 12:56:39,794 [INFO] Limited to 3 scenes
+2026-05-07 12:56:43,413 [INFO] Done. 3 tiles written, 0 scene errors.
+2026-05-07 13:19:58,066 [INFO] Loaded 41 FIDs from /share/castor/home/e2406749/tropical_forest_disturbance/data_csv/sample_10pct_stratified.txt
+2026-05-07 13:19:58,066 [INFO] CSV dir: /share/castor/home/e2406749/tropical_forest_disturbance/data_csv
+2026-05-07 13:19:58,066 [INFO] Output: /share/castor/home/e2406749/thesis_tiles
+2026-05-07 13:19:58,066 [INFO] Sizes: [224]
+2026-05-07 13:19:58,066 [INFO] CSVs: ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
+2026-05-07 13:19:58,066 [INFO] FID filter: 41
+2026-05-07 13:19:58,108 [INFO] Total scenes (fid × window × scene): 645
+2026-05-07 13:20:05,979 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=30 bef)
+2026-05-07 13:20:06,186 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094919_20230930T094944_050555_0616E4_C554 (fid=30 bef)
+2026-05-07 13:20:14,822 [INFO] Progress: 50/645 scenes
+2026-05-07 13:20:19,045 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=23 bef)
+2026-05-07 13:20:25,824 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=27 bef)
+2026-05-07 13:20:31,550 [INFO] Progress: 100/645 scenes
+2026-05-07 13:20:38,397 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=334 bef)
+2026-05-07 13:21:32,815 [INFO] Progress: 150/645 scenes
+2026-05-07 13:22:12,930 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094919_20230930T094944_050555_0616E4_C554 (fid=125 aft)
+2026-05-07 13:24:39,912 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=3 evt)
+2026-05-07 13:25:40,978 [INFO] Progress: 200/645 scenes
+2026-05-07 13:25:43,549 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094919_20230930T094944_050555_0616E4_C554 (fid=354 evt)
+2026-05-07 13:25:51,303 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094919_20230930T094944_050555_0616E4_C554 (fid=13 evt)
+2026-05-07 13:25:52,178 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=29 bef)
+2026-05-07 13:26:11,051 [INFO] Progress: 250/645 scenes
+2026-05-07 13:26:35,255 [INFO] Progress: 300/645 scenes
+2026-05-07 13:27:03,015 [INFO] Progress: 350/645 scenes
+2026-05-07 13:27:15,410 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=71 aft)
+2026-05-07 13:27:20,130 [INFO] Progress: 400/645 scenes
+2026-05-07 13:27:49,188 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=346 aft)
+2026-05-07 13:27:54,455 [INFO] Progress: 450/645 scenes
+2026-05-07 13:28:01,198 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=364 aft)
+2026-05-07 13:28:14,646 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094944_20230930T095009_050555_0616E4_8B83 (fid=363 aft)
+2026-05-07 13:28:32,861 [INFO] Progress: 500/645 scenes
+2026-05-07 13:28:57,482 [INFO] Progress: 550/645 scenes
+2026-05-07 13:29:19,372 [INFO] Progress: 600/645 scenes
+2026-05-07 13:29:59,419 [WARNING] No RTC for S1A_IW_GRDH_1SDV_20230930T094919_20230930T094944_050555_0616E4_C554 (fid=384 aft)
+2026-05-07 13:30:04,264 [INFO] Done. 1260 tiles written, 0 scene errors.
