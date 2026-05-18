@@ -1729,3 +1729,134 @@
 2026-04-19 16:12:01,163 [INFO] FID 3: 12 new downloads
 2026-04-19 16:12:01,165 [INFO] Pipeline complete. 12 total downloads.
 2026-04-19 16:12:01,165 [INFO] Output: /tmp/rtc_smoke_224px
+2026-05-14 19:42:11,208 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-05-14 19:42:11,208 [INFO] Tile size: 120x120 px (1200 m footprint)
+2026-05-14 19:42:11,208 [INFO] Output base: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles_120px
+2026-05-14 19:42:11,208 [INFO] Products: ['s2_l2a']
+2026-05-14 19:42:11,220 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-05-14 19:42:11,226 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-05-14 19:42:11,233 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-05-14 19:42:11,233 [INFO] Merged: 389 FIDs, 12856 unique (fid, image, window) pairs
+2026-05-14 19:42:11,234 [INFO] Sampled 38 FIDs (10.0%)
+2026-05-14 19:42:11,234 [INFO] Initializing Google Earth Engine...
+2026-05-14 19:42:12,607 [INFO] Processing FID 297 (1/38)
+2026-05-14 19:42:26,656 [INFO] FID 297: 11 new downloads
+2026-05-14 19:42:26,657 [INFO] Processing FID 84 (2/38)
+2026-05-14 19:43:27,882 [INFO] FID 84: 51 new downloads
+2026-05-14 19:43:27,884 [INFO] Processing FID 143 (3/38)
+2026-05-14 19:43:32,795 [INFO] FID 143: 4 new downloads
+2026-05-14 19:43:32,797 [INFO] Processing FID 78 (4/38)
+2026-05-14 19:44:16,395 [INFO] FID 78: 36 new downloads
+2026-05-14 19:44:16,397 [INFO] Processing FID 153 (5/38)
+2026-05-14 19:44:35,354 [INFO] FID 153: 16 new downloads
+2026-05-14 19:44:35,356 [INFO] Processing FID 349 (6/38)
+2026-05-14 19:45:51,502 [INFO] FID 349: 63 new downloads
+2026-05-14 19:45:51,503 [INFO] Processing FID 195 (7/38)
+2026-05-14 19:46:19,120 [INFO] FID 195: 24 new downloads
+2026-05-14 19:46:19,121 [INFO] Processing FID 228 (8/38)
+2026-05-14 19:46:37,335 [INFO] FID 228: 15 new downloads
+2026-05-14 19:46:37,336 [INFO] Processing FID 382 (9/38)
+2026-05-14 19:56:29,287 [INFO] FID 382: 560 new downloads
+2026-05-14 19:56:29,291 [INFO] Processing FID 221 (10/38)
+2026-05-14 19:56:33,322 [INFO] FID 221: 4 new downloads
+2026-05-14 19:56:33,325 [INFO] Processing FID 122 (11/38)
+2026-05-14 19:56:49,067 [INFO] FID 122: 14 new downloads
+2026-05-14 19:56:49,070 [INFO] Processing FID 327 (12/38)
+2026-05-14 19:58:07,152 [INFO] FID 327: 72 new downloads
+2026-05-14 19:58:07,154 [INFO] Processing FID 273 (13/38)
+2026-05-14 19:58:16,353 [INFO] FID 273: 8 new downloads
+2026-05-14 19:58:16,355 [INFO] Processing FID 389 (14/38)
+2026-05-14 19:58:45,703 [INFO] FID 389: 25 new downloads
+2026-05-14 19:58:45,706 [INFO] Processing FID 11 (15/38)
+2026-05-14 19:59:44,714 [INFO] FID 11: 56 new downloads
+2026-05-14 19:59:44,719 [INFO] Processing FID 142 (16/38)
+2026-05-15 10:13:22,438 [INFO] Parsing CSVs from: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tropical_forest_disturbance/data_csv
+2026-05-15 10:13:22,438 [INFO] Tile size: 120x120 px (1200 m footprint)
+2026-05-15 10:13:22,438 [INFO] Output base: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles_120px
+2026-05-15 10:13:22,439 [INFO] Products: ['s2_l2a', 's1_grd']
+2026-05-15 10:13:22,457 [INFO] Parsed v1_images_s2_s1.csv: 389 rows
+2026-05-15 10:13:22,464 [INFO] Parsed v2_images_s2_s1.csv: 389 rows
+2026-05-15 10:13:22,478 [INFO] Parsed v3_images_s2_s1.csv: 389 rows
+2026-05-15 10:13:22,480 [INFO] Merged: 389 FIDs, 12856 unique (fid, image, window) pairs
+2026-05-15 10:13:22,482 [INFO] Sampled 38 FIDs (10.0%)
+2026-05-15 10:13:22,482 [INFO] Initializing Google Earth Engine...
+2026-05-15 10:13:24,358 [INFO] Processing FID 297 (1/38)
+2026-05-15 10:13:41,707 [INFO] FID 297: 25 new downloads
+2026-05-15 10:13:41,709 [INFO] Processing FID 84 (2/38)
+2026-05-15 10:14:53,086 [INFO] FID 84: 111 new downloads
+2026-05-15 10:14:53,089 [INFO] Processing FID 143 (3/38)
+2026-05-15 10:15:03,809 [INFO] FID 143: 14 new downloads
+2026-05-15 10:15:03,810 [INFO] Processing FID 78 (4/38)
+2026-05-15 10:15:27,317 [INFO] FID 78: 56 new downloads
+2026-05-15 10:15:27,319 [INFO] Processing FID 153 (5/38)
+2026-05-15 10:16:16,846 [INFO] FID 153: 56 new downloads
+2026-05-15 10:16:16,849 [INFO] Processing FID 349 (6/38)
+2026-05-15 10:17:30,656 [INFO] FID 349: 126 new downloads
+2026-05-15 10:17:30,659 [INFO] Processing FID 195 (7/38)
+2026-05-15 10:18:09,141 [INFO] FID 195: 56 new downloads
+2026-05-15 10:18:09,143 [INFO] Processing FID 228 (8/38)
+2026-05-15 10:18:43,845 [INFO] FID 228: 45 new downloads
+2026-05-15 10:18:43,847 [INFO] Processing FID 382 (9/38)
+2026-05-15 10:24:39,038 [WARNING] Sleeping 0.56 seconds before retry 1 of 5 for request: POST https://earthengine.googleapis.com/v1/projects/zinc-wares-316319/image:computePixels?, after 502
+2026-05-15 10:29:51,095 [INFO] FID 382: 940 new downloads
+2026-05-15 10:29:51,100 [INFO] Processing FID 221 (10/38)
+2026-05-15 10:30:30,463 [INFO] FID 221: 40 new downloads
+2026-05-15 10:30:30,467 [INFO] Processing FID 122 (11/38)
+2026-05-15 10:30:45,357 [INFO] FID 122: 28 new downloads
+2026-05-15 10:30:45,361 [INFO] Processing FID 327 (12/38)
+2026-05-15 10:32:12,936 [INFO] FID 327: 148 new downloads
+2026-05-15 10:32:12,938 [INFO] Processing FID 273 (13/38)
+2026-05-15 10:32:24,575 [INFO] FID 273: 18 new downloads
+2026-05-15 10:32:24,578 [INFO] Processing FID 389 (14/38)
+2026-05-15 10:32:49,110 [INFO] FID 389: 47 new downloads
+2026-05-15 10:32:49,114 [INFO] Processing FID 11 (15/38)
+2026-05-15 10:33:38,328 [INFO] FID 11: 100 new downloads
+2026-05-15 10:33:38,333 [INFO] Processing FID 142 (16/38)
+2026-05-15 10:33:50,527 [INFO] FID 142: 14 new downloads
+2026-05-15 10:33:50,532 [INFO] Processing FID 271 (17/38)
+2026-05-15 10:34:24,084 [INFO] FID 271: 32 new downloads
+2026-05-15 10:34:24,088 [INFO] Processing FID 216 (18/38)
+2026-05-15 10:34:54,505 [INFO] FID 216: 28 new downloads
+2026-05-15 10:34:54,508 [INFO] Processing FID 161 (19/38)
+2026-05-15 10:35:17,741 [INFO] FID 161: 21 new downloads
+2026-05-15 10:35:17,746 [INFO] Processing FID 81 (20/38)
+2026-05-15 10:41:02,893 [INFO] FID 81: 164 new downloads
+2026-05-15 10:41:02,898 [INFO] Processing FID 176 (21/38)
+2026-05-15 10:41:44,713 [INFO] FID 176: 38 new downloads
+2026-05-15 10:41:44,717 [INFO] Processing FID 85 (22/38)
+2026-05-15 10:46:52,568 [INFO] FID 85: 264 new downloads
+2026-05-15 10:46:52,574 [INFO] Processing FID 144 (23/38)
+2026-05-15 10:48:10,966 [INFO] FID 144: 6 new downloads
+2026-05-15 10:48:10,971 [INFO] Processing FID 66 (24/38)
+2026-05-15 10:49:51,909 [INFO] FID 66: 84 new downloads
+2026-05-15 10:49:51,913 [INFO] Processing FID 12 (25/38)
+2026-05-15 10:54:13,359 [INFO] FID 12: 260 new downloads
+2026-05-15 10:54:13,366 [INFO] Processing FID 283 (26/38)
+2026-05-15 10:56:14,312 [INFO] FID 283: 104 new downloads
+2026-05-15 10:56:14,317 [INFO] Processing FID 116 (27/38)
+2026-05-15 10:56:47,641 [INFO] FID 116: 29 new downloads
+2026-05-15 10:56:47,646 [INFO] Processing FID 139 (28/38)
+2026-05-15 10:58:53,012 [INFO] FID 139: 82 new downloads
+2026-05-15 10:58:53,019 [INFO] Processing FID 352 (29/38)
+2026-05-15 10:59:49,206 [INFO] FID 352: 47 new downloads
+2026-05-15 10:59:49,210 [INFO] Processing FID 167 (30/38)
+2026-05-15 11:00:48,781 [INFO] FID 167: 54 new downloads
+2026-05-15 11:00:48,787 [INFO] Processing FID 288 (31/38)
+2026-05-15 11:01:12,007 [INFO] FID 288: 18 new downloads
+2026-05-15 11:01:12,011 [INFO] Processing FID 388 (32/38)
+2026-05-15 11:04:09,391 [INFO] FID 388: 136 new downloads
+2026-05-15 11:04:09,398 [INFO] Processing FID 225 (33/38)
+2026-05-15 11:04:47,630 [INFO] FID 225: 39 new downloads
+2026-05-15 11:04:47,637 [INFO] Processing FID 141 (34/38)
+2026-05-15 11:05:12,719 [INFO] FID 141: 21 new downloads
+2026-05-15 11:05:12,724 [INFO] Processing FID 377 (35/38)
+2026-05-15 11:06:34,067 [INFO] FID 377: 67 new downloads
+2026-05-15 11:06:34,074 [INFO] Processing FID 46 (36/38)
+2026-05-15 11:12:34,770 [INFO] FID 46: 304 new downloads
+2026-05-15 11:12:34,778 [INFO] Processing FID 79 (37/38)
+2026-05-15 11:18:20,472 [WARNING] Sleeping 0.43 seconds before retry 1 of 5 for request: POST https://earthengine.googleapis.com/v1/projects/zinc-wares-316319/image:computePixels?, after 502
+2026-05-15 11:20:02,235 [INFO] FID 79: 205 new downloads
+2026-05-15 11:20:02,241 [INFO] Processing FID 203 (38/38)
+2026-05-15 11:21:26,321 [INFO] FID 203: 72 new downloads
+2026-05-15 11:21:26,332 [INFO] Pipeline complete. 3899 total downloads.
+2026-05-15 11:21:26,332 [INFO] Output: /Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles_120px
