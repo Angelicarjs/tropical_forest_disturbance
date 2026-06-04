@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
 Pipeline to download Sentinel-1 and Sentinel-2 tiles from Google Earth Engine
-for multiple foundation models (CROMA, TerraFM, Clay, SkySense).
+for multiple foundation models (CROMA, TerraFM, Clay).
 
 Downloads tiles at configurable size (default 120x120 @ 10m). Re-run the
 pipeline with a different --tile-size to produce datasets sized for each
-foundation model (e.g. 224 for ViT, 256 for Clay, 534 for TerraFM).
+foundation model (e.g. 224 for TerraFM, 256 for Clay).
 
 Products downloaded per image ID:
   - S2 L2A  (COPERNICUS/S2_SR_HARMONIZED)  — all models
   - S2 L1C  (COPERNICUS/S2_HARMONIZED)     — TerraFM
-  - S1 GRD  (COPERNICUS/S1_GRD)            — CROMA, SkySense
+  - S1 GRD  (COPERNICUS/S1_GRD)            — CROMA
   - S1 RTC  (COPERNICUS/S1_RTC)            — TerraFM, Clay
 
 Output structure (output dir is auto-suffixed with _{N}px):
@@ -30,9 +30,8 @@ Deduplication:
 
 Usage:
   python tile_pipeline.py                          # Process all FIDs at 120x120 (sequential)
-  python tile_pipeline.py --tile-size 224          # Download at 224x224 (ViT native)
+  python tile_pipeline.py --tile-size 224          # Download at 224x224 (TerraFM native)
   python tile_pipeline.py --tile-size 256          # Download at 256x256 (Clay native)
-  python tile_pipeline.py --tile-size 534          # Download at 534x534 (TerraFM native)
   python tile_pipeline.py --sample-pct 10          # 120x120, 10% of FIDs (default size)
   python tile_pipeline.py --workers 6              # 6 parallel workers
   python tile_pipeline.py --workers 6 --resume     # Resume parallel run
