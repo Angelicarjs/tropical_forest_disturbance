@@ -63,12 +63,11 @@ GEE_PROJECT = 'zinc-wares-316319'
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.path.join(_SCRIPT_DIR, 'data_csv')
 
-if os.path.exists(os.path.expanduser('~/thesis_scripts')):
-    _DEFAULT_CSV_DIR = _DATA_DIR  # data_csv/ next to the script
-    _DEFAULT_OUTPUT = os.path.expanduser('~/thesis_tiles')
-else:
+if _SCRIPT_DIR.startswith('/share/castor'):   # cluster IRISA
     _DEFAULT_CSV_DIR = _DATA_DIR
-    _DEFAULT_OUTPUT = '/Users/angelicamariamorenorojas/Desktop/Master/thesis/tiles'
+    _DEFAULT_OUTPUT = os.path.expanduser('~/thesis_tiles') 
+else:                                          # Mac
+    _DEFAULT_OUTPUT = os.path.expanduser('~/Desktop/Master/thesis/tiles_120px')
 
 CSV_FILES = ['v1_images_s2_s1.csv', 'v2_images_s2_s1.csv', 'v3_images_s2_s1.csv']
 
