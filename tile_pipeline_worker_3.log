@@ -1,0 +1,101 @@
+2026-06-04 23:40:25,747 [INFO] Worker 3: starting with 65 FIDs, products: ['s2_l2a', 's1_grd'], tile_size: 120px
+2026-06-04 23:40:26,893 [INFO] Worker 3: resumed with 385 completed
+2026-06-04 23:40:26,893 [INFO] Worker 3: FID 141 (1/65)
+2026-06-04 23:40:50,289 [INFO] Worker 3: FID 141 done, 21 downloads
+2026-06-04 23:40:50,292 [INFO] Worker 3: FID 215 (2/65)
+2026-06-04 23:41:05,366 [INFO] Worker 3: FID 215 done, 14 downloads
+2026-06-04 23:41:05,368 [INFO] Worker 3: FID 271 (3/65)
+2026-06-04 23:41:05,382 [INFO] Worker 3: FID 271 done, 32 downloads
+2026-06-04 23:41:05,384 [INFO] Worker 3: FID 127 (4/65)
+2026-06-04 23:41:35,909 [INFO] Worker 3: FID 127 done, 28 downloads
+2026-06-04 23:41:35,911 [INFO] Worker 3: FID 6 (5/65)
+2026-06-04 23:43:44,691 [INFO] Worker 3: FID 6 done, 123 downloads
+2026-06-04 23:43:44,694 [INFO] Worker 3: FID 16 (6/65)
+2026-06-04 23:46:09,945 [INFO] Worker 3: FID 16 done, 141 downloads
+2026-06-04 23:46:09,948 [INFO] Worker 3: FID 40 (7/65)
+2026-06-04 23:49:41,581 [INFO] Worker 3: FID 40 done, 236 downloads
+2026-06-04 23:49:41,584 [INFO] Worker 3: FID 274 (8/65)
+2026-06-04 23:50:01,661 [INFO] Worker 3: FID 274 done, 20 downloads
+2026-06-04 23:50:01,664 [INFO] Worker 3: FID 150 (9/65)
+2026-06-04 23:50:45,349 [INFO] Worker 3: FID 150 done, 44 downloads
+2026-06-04 23:50:45,351 [INFO] Worker 3: FID 84 (10/65)
+2026-06-04 23:52:32,228 [INFO] Worker 3: FID 84 done, 111 downloads
+2026-06-04 23:52:32,232 [INFO] Worker 3: FID 219 (11/65)
+2026-06-04 23:52:55,922 [INFO] Worker 3: FID 219 done, 24 downloads
+2026-06-04 23:52:55,926 [INFO] Worker 3: FID 278 (12/65)
+2026-06-04 23:53:09,893 [INFO] Worker 3: FID 278 done, 14 downloads
+2026-06-04 23:53:09,898 [INFO] Worker 3: FID 316 (13/65)
+2026-06-04 23:54:26,075 [INFO] Worker 3: FID 316 done, 74 downloads
+2026-06-04 23:54:26,079 [INFO] Worker 3: FID 46 (14/65)
+2026-06-04 23:59:23,118 [INFO] Worker 3: FID 46 done, 304 downloads
+2026-06-04 23:59:23,123 [INFO] Worker 3: FID 69 (15/65)
+2026-06-05 00:01:46,102 [INFO] Worker 3: FID 69 done, 144 downloads
+2026-06-05 00:01:46,108 [INFO] Worker 3: FID 333 (16/65)
+2026-06-05 00:03:23,027 [INFO] Worker 3: FID 333 done, 98 downloads
+2026-06-05 00:03:23,032 [INFO] Worker 3: FID 8 (17/65)
+2026-06-05 00:04:48,654 [INFO] Worker 3: FID 8 done, 86 downloads
+2026-06-05 00:04:48,659 [INFO] Worker 3: FID 31 (18/65)
+2026-06-05 00:06:18,419 [INFO] Worker 3: FID 31 done, 90 downloads
+2026-06-05 00:06:18,426 [INFO] Worker 3: FID 161 (19/65)
+2026-06-05 00:06:18,428 [INFO] Worker 3: FID 161 done, 0 downloads
+2026-06-05 00:06:18,432 [INFO] Worker 3: FID 343 (20/65)
+2026-06-05 00:07:36,863 [INFO] Worker 3: FID 343 done, 82 downloads
+2026-06-05 00:07:36,869 [INFO] Worker 3: FID 89 (21/65)
+2026-06-05 00:08:19,323 [INFO] Worker 3: FID 89 done, 42 downloads
+2026-06-05 00:08:19,328 [INFO] Worker 3: FID 20 (22/65)
+2026-06-05 00:11:08,360 [INFO] Worker 3: FID 20 done, 172 downloads
+2026-06-05 00:11:08,366 [INFO] Worker 3: FID 149 (23/65)
+2026-06-05 00:11:49,908 [INFO] Worker 3: FID 149 done, 42 downloads
+2026-06-05 00:11:49,914 [INFO] Worker 3: FID 224 (24/65)
+2026-06-05 00:11:49,935 [INFO] Worker 3: FID 224 done, 69 downloads
+2026-06-05 00:11:49,939 [INFO] Worker 3: FID 280 (25/65)
+2026-06-05 00:12:42,869 [INFO] Worker 3: FID 280 done, 56 downloads
+2026-06-05 00:12:42,876 [INFO] Worker 3: FID 169 (26/65)
+2026-06-05 00:13:13,340 [INFO] Worker 3: FID 169 done, 32 downloads
+2026-06-05 00:13:13,345 [INFO] Worker 3: FID 120 (27/65)
+2026-06-05 00:14:08,519 [INFO] Worker 3: FID 120 done, 54 downloads
+2026-06-05 00:14:08,525 [INFO] Worker 3: FID 196 (28/65)
+2026-06-05 00:15:58,818 [INFO] Worker 3: FID 196 done, 135 downloads
+2026-06-05 00:15:58,825 [INFO] Worker 3: FID 256 (29/65)
+2026-06-05 00:16:59,535 [INFO] Worker 3: FID 256 done, 64 downloads
+2026-06-05 00:16:59,542 [INFO] Worker 3: FID 129 (30/65)
+2026-06-05 00:18:11,231 [INFO] Worker 3: FID 129 done, 70 downloads
+2026-06-05 00:18:11,239 [INFO] Worker 3: FID 208 (31/65)
+2026-06-05 00:19:27,620 [INFO] Worker 3: FID 208 done, 78 downloads
+2026-06-05 00:19:27,627 [INFO] Worker 3: FID 133 (32/65)
+2026-06-05 00:20:05,122 [INFO] Worker 3: FID 133 done, 39 downloads
+2026-06-05 00:20:05,129 [INFO] Worker 3: FID 51 (33/65)
+2026-06-05 00:21:24,329 [INFO] Worker 3: FID 51 done, 80 downloads
+2026-06-05 00:21:24,336 [INFO] Worker 3: FID 64 (34/65)
+2026-06-05 00:22:47,877 [INFO] Worker 3: FID 64 done, 84 downloads
+2026-06-05 00:22:47,885 [INFO] Worker 3: FID 329 (35/65)
+2026-06-05 00:23:29,416 [INFO] Worker 3: FID 329 done, 41 downloads
+2026-06-05 00:23:29,424 [INFO] Worker 3: FID 359 (36/65)
+2026-06-05 00:24:11,824 [INFO] Worker 3: FID 359 done, 44 downloads
+2026-06-05 00:24:11,832 [INFO] Worker 3: FID 33 (37/65)
+2026-06-05 00:26:30,963 [INFO] Worker 3: FID 33 done, 144 downloads
+2026-06-05 00:26:30,971 [INFO] Worker 3: FID 163 (38/65)
+2026-06-05 00:27:08,059 [INFO] Worker 3: FID 163 done, 38 downloads
+2026-06-05 00:27:08,065 [INFO] Worker 3: FID 234 (39/65)
+2026-06-05 00:27:08,082 [INFO] Worker 3: FID 234 done, 42 downloads
+2026-06-05 00:27:08,087 [INFO] Worker 3: FID 111 (40/65)
+2026-06-05 00:27:45,891 [INFO] Worker 3: FID 111 done, 38 downloads
+2026-06-05 00:27:45,897 [INFO] Worker 3: FID 80 (41/65)
+2026-06-05 00:28:27,966 [INFO] Worker 3: FID 80 done, 41 downloads
+2026-06-05 00:28:27,975 [INFO] Worker 3: FID 368 (42/65)
+2026-06-05 00:30:34,018 [INFO] Worker 3: FID 368 done, 132 downloads
+2026-06-05 00:30:34,027 [INFO] Worker 3: FID 289 (43/65)
+2026-06-05 00:31:58,948 [INFO] Worker 3: FID 289 done, 85 downloads
+2026-06-05 00:31:58,957 [INFO] Worker 3: FID 121 (44/65)
+2026-06-05 00:32:52,652 [INFO] Worker 3: FID 121 done, 52 downloads
+2026-06-05 00:32:52,658 [INFO] Worker 3: FID 188 (45/65)
+2026-06-05 00:33:22,468 [INFO] Worker 3: FID 188 done, 29 downloads
+2026-06-05 00:33:22,477 [INFO] Worker 3: FID 356 (46/65)
+2026-06-05 00:33:59,767 [INFO] Worker 3: FID 356 done, 35 downloads
+2026-06-05 00:33:59,776 [INFO] Worker 3: FID 327 (47/65)
+2026-06-05 00:36:39,437 [INFO] Worker 3: FID 327 done, 148 downloads
+2026-06-05 00:36:39,446 [INFO] Worker 3: FID 383 (48/65)
+2026-06-05 00:38:33,302 [INFO] Worker 3: FID 383 done, 117 downloads
+2026-06-05 00:38:33,310 [INFO] Worker 3: FID 331 (49/65)
+2026-06-05 00:39:57,494 [INFO] Worker 3: FID 331 done, 86 downloads
+2026-06-05 00:39:57,504 [INFO] Worker 3: FID 369 (50/65)
