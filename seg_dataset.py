@@ -56,11 +56,15 @@ class DisturbanceSegDataset(Dataset):
                 continue
             self.fid_polys.setdefault(row["fid"], []).append((row.geometry, cid))
 
+        print(self.fid_polys)
+
         # --- Index every embedding tile in the requested windows ---
         # path: embeddings/joint/fid_<fid>/<window>/<s2id__s1id>/tile_N.npy
         self.samples = []
+        #for every .npy file in the joint embeddings
         for npy in glob.glob(str(Path(embeddings_root) / "joint" / "fid_*" / "*" / "*" / "tile_*.npy")):
             p = Path(npy)
+            #take the window and the fid from the path, check if they are in the requested windows and in the shapefile, if not skip
             pair = p.parent.name          # "<s2id>__<s1id>"
             window = p.parent.parent.name
             fid = p.parent.parent.parent.name.replace("fid_", "")
@@ -72,6 +76,7 @@ class DisturbanceSegDataset(Dataset):
                 "npy": npy, "fid": fid, "window": window,
                 "s2_id": pair.split("__")[0], "tile": p.stem,  # "tile_N"
             })
+        print('samples (evt+aft):', self.samples[:5])
 
     def __len__(self):
         return len(self.samples)
@@ -94,13 +99,15 @@ class DisturbanceSegDataset(Dataset):
         s = self.samples[i]
         emb = np.load(s["npy"])               # (15, 15, 768)
         emb = np.transpose(emb, (2, 0, 1))    # (768, 15, 15) -> channels first
+        # x is the embedding
         x = torch.from_numpy(emb).float()
+        # y is the mask built on the fly from the shapefile
         y = torch.from_numpy(self._build_mask(s)).long()  # (120, 120)
         return x, y
 
 
 if __name__ == "__main__":
-    # Smoke test — adjust paths to your machine
+    # Smoke test
     import os
     EMB = os.path.expanduser("~/thesis_tiles_120px") if False else "embeddings"
     ds = DisturbanceSegDataset(
@@ -112,4 +119,4 @@ if __name__ == "__main__":
     x, y = ds[0]
     print(f"input  x: {tuple(x.shape)}  dtype={x.dtype}")
     print(f"target y: {tuple(y.shape)}  dtype={y.dtype}")
-    print(f"clases presentes en la máscara[0]: {sorted(torch.unique(y).tolist())}")
+    print(f"existing classes in mask[0]: {sorted(torch.unique(y).tolist())}")
