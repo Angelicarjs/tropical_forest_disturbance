@@ -6,6 +6,7 @@ This decoder upsamples those features 8x (15 -> 120) into a per-pixel class map.
 
   input : (B, 768, 15, 15)   CROMA joint embedding
   output: (B, 7, 120, 120)    class logits per pixel (6 types + background)
+  B is the batch size.
 
 Decoder on top of the frozen CROMA backbone. We only train the decoder, not the backbone.
 """
@@ -15,15 +16,20 @@ import torch.nn as nn
 
 class SegDecoder(nn.Module):
     def __init__(self, in_dim=768, num_classes=7):
-        super().__init__()
+        super().__init__() #initialize nn.Module
 
+        #entry cin, output cout)
         def up_block(cin, cout):
             # upsample x2, then a conv to refine
             return nn.Sequential(
+                #upsample duplicates each pixel to make it 2x bigger, with interpolation nearest, align corners per their centers
                 nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False),
+                #convolution 3x3 with padding 1 to keep the same spatial dimensions
                 nn.Conv2d(cin, cout, kernel_size=3, padding=1),
+                # normalize the features after convolution
                 nn.BatchNorm2d(cout),
-                nn.ReLU(inplace=True),
+                # apply non-linearity
+                nn.ReLU(inplace=True), #inplace=True means it will modify the input tensor directly, saving memory by not creating a new tensor for the output of ReLU
             )
 
         # 1x1 conv to reduce 768 channels before upsampling
@@ -52,6 +58,6 @@ if __name__ == "__main__":
     n_params = sum(p.numel() for p in model.parameters())
     x = torch.randn(2, 768, 15, 15)     # fake batch of 2 tiles
     y = model(x)
-    print(f"params entrenables: {n_params:,}")
+    print(f"params: {n_params:,}")
     print(f"input : {tuple(x.shape)}")
-    print(f"output: {tuple(y.shape)}   (debe ser (2, {NUM_CLASSES}, 120, 120))")
+    print(f"output: {tuple(y.shape)}")

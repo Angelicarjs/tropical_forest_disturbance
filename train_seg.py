@@ -1,13 +1,11 @@
 """
 Train the U-Net decoder for disturbance-type segmentation on frozen CROMA embeddings.
 
-Key choices (given the data):
-  - Split is done by FID (stratified by class) so tiles of the same event never
+Key choices:
+  - Split is done by FID (stratified by class), not by tile, to avoid spatial leakage.ß
   - Weighted cross-entropy: background and "Clear-cut bare soil" dominate, so
     rare classes are up-weighted by inverse pixel frequency.
   - Metric: per-class IoU + mean IoU (mIoU), so we see how each type does.
-
-Run on a GPU node (see run_seg.sh).
 """
 
 import os

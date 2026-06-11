@@ -35,7 +35,7 @@ from make_embeddings import (
     load_or_compute_stats,
 )
 
-TILES_ROOT = "../tiles_120px"
+TILES_ROOT = "/share/castor/home/e2406749/thesis_tiles_120px"
 EMB_ROOT = "embeddings"
 SHP_PATH = "data_shp/label_polygons.shp"
 CSV_TEMPLATE = "data_csv/{version}_images_s2_s1.csv"

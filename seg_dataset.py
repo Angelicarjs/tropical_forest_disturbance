@@ -56,8 +56,6 @@ class DisturbanceSegDataset(Dataset):
                 continue
             self.fid_polys.setdefault(row["fid"], []).append((row.geometry, cid))
 
-        print(self.fid_polys)
-
         # --- Index every embedding tile in the requested windows ---
         # path: embeddings/joint/fid_<fid>/<window>/<s2id__s1id>/tile_N.npy
         self.samples = []
@@ -76,7 +74,7 @@ class DisturbanceSegDataset(Dataset):
                 "npy": npy, "fid": fid, "window": window,
                 "s2_id": pair.split("__")[0], "tile": p.stem,  # "tile_N"
             })
-        print('samples (evt+aft):', self.samples[:5])
+        #print('samples (evt+aft):', self.samples[:5])
 
     def __len__(self):
         return len(self.samples)
@@ -116,7 +114,9 @@ if __name__ == "__main__":
         shp_path="data_shp/label_polygons.shp",
     )
     print(f"samples (evt+aft): {len(ds)}")
-    x, y = ds[0]
+    x, y = ds[7]
+    #np.set_printoptions(threshold=np.inf)
+    #print("y:", y.numpy())
     print(f"input  x: {tuple(x.shape)}  dtype={x.dtype}")
     print(f"target y: {tuple(y.shape)}  dtype={y.dtype}")
     print(f"existing classes in mask[0]: {sorted(torch.unique(y).tolist())}")
