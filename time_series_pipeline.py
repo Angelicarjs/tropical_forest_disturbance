@@ -39,6 +39,7 @@ TILES_ROOT = "/share/castor/home/e2406749/thesis_tiles_120px"
 EMB_ROOT = "embeddings"
 SHP_PATH = "data_shp/label_polygons.shp"
 CSV_TEMPLATE = "data_csv/{version}_images_s2_s1.csv"
+_VERSION = "v3"  # current cloud-filter version; set by run(), shown in plot titles
 
 SUBDIRS = {"optical": "s2_l2a", "sar": "s1_grd", "joint": "joint"}
 WIN_COLORS = {"bef": "tab:blue", "evt": "tab:red", "aft": "tab:green"}
@@ -224,7 +225,7 @@ def _cosine_sim_plot(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
                 ax.text(j, i, f"{S[i, j]:.2f}", ha="center", va="center", fontsize=7)
     ax.set_xticks(range(len(labels))); ax.set_xticklabels(labels, rotation=45, ha="right")
     ax.set_yticks(range(len(labels))); ax.set_yticklabels(labels)
-    ax.set_title(f"Cosine sim {modality.upper()} TxT — token ({tok_r},{tok_c})")
+    ax.set_title(f"Cosine sim {modality.upper()} TxT — token ({tok_r},{tok_c}) — {_VERSION}")
     plt.colorbar(im, ax=ax, fraction=0.046)
     plt.tight_layout(); plt.show()
 
@@ -262,7 +263,7 @@ def _ndvi_profile(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s2,
         for w in ("bef", "evt", "aft") if w in wins
     ]
     plt.legend(handles=handles, loc="best")
-    plt.title(f"NDVI — fid {fid}, tile {tile}, token ({tok_r},{tok_c})")
+    plt.title(f"NDVI — fid {fid}, tile {tile}, token ({tok_r},{tok_c}) — {_VERSION}")
     plt.ylabel("NDVI"); plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.tight_layout(); plt.show()
 
@@ -292,7 +293,7 @@ def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s
     plt.plot(dates, tile_means[:, top_dim], "-", color="gray", alpha=0.5)
     plt.scatter(dates, tile_means[:, top_dim], c=colors, s=70,
                 edgecolors="black", linewidths=0.5, zorder=3)
-    plt.title(f"Dim {top_dim} (std={dim_scores[top_dim]:.3f}) — fid {fid}, tile {tile}, {modality}")
+    plt.title(f"Dim {top_dim} (std={dim_scores[top_dim]:.3f}) — fid {fid}, tile {tile}, {modality} — {_VERSION}")
     plt.ylabel(f"embedding value (dim {top_dim})")
     plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.legend(
@@ -334,7 +335,7 @@ def _optical_rgb_grid(fid: int, tile: int, allowed_s2, ncols: int = 5, vmax: int
         ax.axis("off")
     for ax in axes[n:]:
         ax.axis("off")
-    fig.suptitle(f"S2 L2A — fid {fid}, tile {tile}  ({n} dates)", y=1.0)
+    fig.suptitle(f"S2 L2A — fid {fid}, tile {tile}  ({n} dates) — {_VERSION}", y=1.0)
     fig.tight_layout(); plt.show()
 
 
@@ -368,7 +369,7 @@ def _vh_time_series(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s1):
         for w in ("bef", "evt", "aft") if w in wins
     ]
     plt.legend(handles=handles, loc="best")
-    plt.title(f"VH — fid {fid}, tile {tile}, token ({tok_r},{tok_c})")
+    plt.title(f"VH — fid {fid}, tile {tile}, token ({tok_r},{tok_c}) — {_VERSION}")
     plt.ylabel("VH"); plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.tight_layout(); plt.show()
 
@@ -378,6 +379,8 @@ def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
         max_gap_days: int = 7) -> dict:
     """Run all notebook steps for (fid, tile) at a token, filtered by `version`."""
     csv_path = CSV_TEMPLATE.format(version=version)
+    global _VERSION
+    _VERSION = version
     print(f"[run] fid={fid} tile={tile} seed={seed} version={version} csv={csv_path}")
 
     _create_embeddings(fid, csv_path, max_gap_days)
