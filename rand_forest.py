@@ -13,7 +13,9 @@ import os
 import glob
 import random
 from pathlib import Path
-
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score
+from collections import defaultdict
 import numpy as np
 from seg_dataset import DisturbanceSegDataset, CLASS_TO_ID
 
@@ -41,9 +43,9 @@ def integrity(emb_root="embeddings", n=300):
             zero += 1
         #means.append(float(a.mean()))
         #stds.append(float(a.std()))
-    print(f"    revisados {min(n, len(paths))}:  bad_shape={bad_shape}  nan/inf={nan}  all_zero={zero}")
+    print(f"    checked {min(n, len(paths))}:  bad_shape={bad_shape}  nan/inf={nan}  all_zero={zero}")
     #if means:
-        #print(f"    valores: mean≈{np.mean(means):.3f}  std≈{np.mean(stds):.3f}  "
+        #print(f"    values: mean≈{np.mean(means):.3f}  std≈{np.mean(stds):.3f}  "
               #f"(should be not 0)")
 
 
@@ -58,27 +60,38 @@ def signal(emb_root, tiles_root, shp):
     X, y, fids = np.array(X), np.array(y), np.array(fids)
     print(f"\n[B] {len(X)} tiles | {len(set(fids))} FIDs | clases={sorted(set(y.tolist()))}")
 
-    # split por FID (sin fugas)
-    ufids = sorted(set(fids.tolist()))
-    random.Random(42).shuffle(ufids)
-    val_fids = set(ufids[: max(1, len(ufids) // 5)])
+    # fid -> clase (una por fid)
+    fid_cls = {}
+    for f, c in zip(fids.tolist(), y.tolist()):
+        fid_cls.setdefault(f, c)
+    
+    # group fids per class
+    cls_fids = defaultdict(list)
+    for f, c in fid_cls.items():
+        cls_fids[c].append(f)
+    
+    # 20% per class for val, rest for train. If a class has only 1 FID, put it all in train (0 val).
+    rng = random.Random(42)
+    val_fids = set()
+    for c, fl in cls_fids.items():
+        fl = sorted(fl)
+        rng.shuffle(fl)
+        n_val = max(1, len(fl) // 5) if len(fl) > 1 else 0
+        val_fids.update(fl[:n_val])
+
+    #val where in val_fids
     va = np.isin(fids, list(val_fids))
+    #train where not in val
     tr = ~va
-    print(f"    train: {tr.sum()} tiles | val: {va.sum()} tiles")
+    print(f"train: {tr.sum()} tiles | val: {va.sum()} tiles")
 
-    try:
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.metrics import classification_report, accuracy_score
-    except ModuleNotFoundError:
-        print("    sklearn no instalado -> pip install scikit-learn")
-        return
-
+    # 300 trees, balanced class weights (unbalanced classes), random_state=0 (reproducible), n_jobs=-1 (cpu in parallel).
     clf = RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=0, n_jobs=-1)
     clf.fit(X[tr], y[tr])
     pred = clf.predict(X[va])
     labels = sorted(set(y.tolist()))
     names = [ID_TO_CLASS[c] for c in labels]
-    print(f"    accuracy (val): {accuracy_score(y[va], pred):.3f}\n")
+    print(f"accuracy (val): {accuracy_score(y[va], pred):.3f}\n")
     print(classification_report(y[va], pred, labels=labels, target_names=names, zero_division=0))
 
 

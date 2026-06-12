@@ -15,7 +15,7 @@ conda activate croma_viz
 cd "$PROJ"
 export PYTHONUNBUFFERED=1   # live logs (no buffering)
 
-echo "Nodo: $(hostname) | GPU: $CUDA_VISIBLE_DEVICES | Inicio: $(date)"
+echo "Node: $(hostname) | GPU: $CUDA_VISIBLE_DEVICES | Start: $(date)"
 
 python train_seg.py \
     --tiles-root "$HOME/thesis_tiles_120px" \
