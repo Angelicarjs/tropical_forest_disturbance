@@ -9,20 +9,16 @@ foundation model (e.g. 224 for TerraFM, 256 for Clay).
 
 Products downloaded per image ID:
   - S2 L2A  (COPERNICUS/S2_SR_HARMONIZED)  — all models
-  - S2 L1C  (COPERNICUS/S2_HARMONIZED)     — TerraFM
   - S1 GRD  (COPERNICUS/S1_GRD)            — CROMA
-  - S1 RTC  (COPERNICUS/S1_RTC)            — TerraFM, Clay
 
 Output structure (output dir is auto-suffixed with _{N}px):
   tiles_120px/
   ├── s2_l2a/
   │   └── fid_{fid}/
-  │       ├── evt/{image_id}/tile_{n}.tif   (13 bands @ 10m, NxN)
+  │       ├── evt/{image_id}/tile_{n}.tif   (12 bands @ 10m, NxN)
   │       ├── bef/{image_id}/tile_{n}.tif
   │       └── aft/{image_id}/tile_{n}.tif
-  ├── s2_l1c/ ...
-  ├── s1_grd/ ...
-  └── s1_rtc/ ...
+  └── s1_grd/ ...
 
 Deduplication:
   Merges v1, v2, v3 CSVs and deduplicates (fid, image_id, window, sensor) tuples
@@ -75,24 +71,15 @@ CRS_CODE = 'EPSG:3857'
 DEFAULT_TILE_SIZE_PX = 120  # Used as default for --tile-size; actual size is threaded through at runtime
 
 # GEE collection IDs per product
-# Note: s1_rtc is NOT a separate collection here. It is derived on-the-fly by
-# applying terrain flattening (Vollrath et al. 2020, volumetric model) to the
-# s1_grd image using Copernicus GLO-30 DEM.
 COLLECTIONS = {
     's2_l2a': 'COPERNICUS/S2_SR_HARMONIZED',
-    's2_l1c': 'COPERNICUS/S2_HARMONIZED',
     's1_grd': 'COPERNICUS/S1_GRD',
-    's1_rtc': 'COPERNICUS/S1_GRD',
 }
-
-DEM_COLLECTION = 'COPERNICUS/DEM/GLO30'
 
 # Bands per product (download all bands relevant to any model)
 PRODUCT_BANDS = {
     's2_l2a': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B11', 'B12'],
-    's2_l1c': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B10', 'B11', 'B12'],
     's1_grd': ['VV', 'VH'],
-    's1_rtc': ['VV', 'VH'],
 }
 
 ALL_PRODUCTS = list(COLLECTIONS.keys())
@@ -156,46 +143,6 @@ def create_tile_grid(polygon_3857, tile_size_m):
             y += tile_size_m
         x += tile_size_m
     return tiles
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# S1 terrain flattening (Vollrath et al. 2020, volumetric model)
-# Port of the canonical GEE implementation. Produces γ⁰_flat in dB from GRD σ⁰.
-# ──────────────────────────────────────────────────────────────────────────────
-
-def apply_terrain_flattening(grd_image):
-    """Terrain-flatten a Sentinel-1 GRD image using Copernicus GLO-30 DEM.
-
-    Volume-scattering model (Vollrath et al. 2020). Input VV/VH are in dB;
-    output is γ⁰ in dB. Layover/shadow pixels are masked.
-    """
-    half_pi = math.pi / 2
-    deg2rad = math.pi / 180
-
-    # DEM kept at native projection (do NOT clip — ee.Terrain.products needs the
-    # native grid to compute slope/aspect correctly).
-    dem = ee.ImageCollection(DEM_COLLECTION).mosaic().select('DEM')
-    terrain = ee.Terrain.products(dem)
-
-    theta_i = grd_image.select('angle').multiply(deg2rad)
-    alpha_s = terrain.select('slope').multiply(deg2rad)
-    phi_s = terrain.select('aspect').multiply(deg2rad)
-
-    # Range azimuth: aspect of the ellipsoid incidence-angle band (down-range)
-    phi_r_img = ee.Terrain.aspect(grd_image.select('angle')).multiply(deg2rad)
-
-    phi_rs = phi_r_img.subtract(phi_s)
-    alpha_r = alpha_s.tan().multiply(phi_rs.cos()).atan()
-
-    sigma0_pow = ee.Image(10).pow(grd_image.select(['VV', 'VH']).divide(10))
-
-    # Volume correction: γ⁰ = σ⁰ × tan(π/2 − θ_i) / tan(π/2 − θ_i + α_r)
-    denom = theta_i.multiply(-1).add(half_pi).tan()
-    numer = theta_i.multiply(-1).add(half_pi).add(alpha_r).tan()
-    gamma0 = sigma0_pow.divide(numer.divide(denom))
-
-    gamma0_db = gamma0.log10().multiply(10).rename(['VV', 'VH'])
-    return gamma0_db.copyProperties(grd_image, ['system:time_start'])
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -383,8 +330,6 @@ def process_fid(record, completed, output_base, products, tile_size_px):
 
                 try:
                     image = ee.Image(collection_id + '/' + image_id)
-                    if product == 's1_rtc':
-                        image = ee.Image(apply_terrain_flattening(image))
                 except Exception as e:
                     logger.error(f"FID {fid}: failed to create image {collection_id}/{image_id}: {e}")
                     continue
@@ -484,7 +429,7 @@ def dry_run(records, completed, products, tile_size_px):
     logger.info(f"  Products requested: {products}")
     # Bytes per pixel measured on existing 534px tiles: S2 ~11.4, S1 ~14.5
     px = tile_size_px * tile_size_px
-    bpp = {'s2_l2a': 11.4, 's2_l1c': 11.4, 's1_grd': 14.5, 's1_rtc': 14.5}
+    bpp = {'s2_l2a': 11.4, 's1_grd': 14.5}
     for product, count in total_per_product.items():
         mb_per_tile = px * bpp.get(product, 12) / 1e6
         est_gb = count * mb_per_tile / 1000
