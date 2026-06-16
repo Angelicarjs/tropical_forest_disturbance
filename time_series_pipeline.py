@@ -26,6 +26,7 @@ from matplotlib.patches import Patch
 from matplotlib.patches import Polygon as MplPolygon
 from rasterio.features import geometry_mask
 from sklearn.preprocessing import normalize
+from sklearn.decomposition import PCA
 
 from make_embeddings import (
     embed_image,
@@ -186,6 +187,15 @@ def _show_tile_with_pixel(fid: int, tile: int, pix_row: int, pix_col: int, rgb_t
     plt.title(f"FID {fid}, tile_{tile} — pixel ({pix_row}, {pix_col})")
     plt.show()
 
+def _show_explicit_token(fid: int, tile: int, tok_r: int, tok_c: int):
+      """Draw the first S2 tile with the (tok_r, tok_c) token center marked."""
+      gdf, poly = _load_polygon(fid)
+      with rasterio.open(_first_s2_tile(fid, tile)) as src:
+          poly_t = gpd.GeoSeries([poly], crs=gdf.crs).to_crs(src.crs).iloc[0]
+          rgb_tile = src.read([4, 3, 2]).transpose(1, 2, 0)
+          poly_pix = [~src.transform * (x, y) for x, y in zip(*poly_t.exterior.xy)]
+      pix_row, pix_col = tok_r * 8 + 4, tok_c * 8 + 4    # token center
+      _show_tile_with_pixel(fid, tile, pix_row, pix_col, rgb_tile, poly_pix)
 
 def _paths_for(fid: int, tile: int, modality: str, allowed_s2, allowed_s1) -> list[str]:
     subdir = SUBDIRS[modality]
@@ -267,6 +277,86 @@ def _ndvi_profile(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s2,
     plt.ylabel("NDVI"); plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.tight_layout(); plt.show()
 
+
+def _pca_first_image(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
+                     num_components: int = 3):
+    # create the cube of embeddings for this fid/tile/modality
+    paths = _paths_for(fid, tile, modality, allowed_s2, allowed_s1)
+    if not paths:
+        print(f"[{modality}] no embeddings after filter — skipping PCA")
+        return
+
+    cube = np.stack([np.load(p) for p in paths])
+    #time, rows, cols, dims 
+    T,R,C,D = cube.shape
+    print(f"[{modality}] cube shape: {cube.shape}")
+
+    # make PCA on the first image (T=0) and project all images onto the first 3 components
+    pca = PCA(n_components=num_components)
+    first_tokens = cube[0].reshape(R*C, D) #flatten rows and columns in one dimension (N_patches, 768)
+    pca.fit(first_tokens)
+
+    #temporal reduction by doing the mean of each time step (T) over the spatial dimensions (R, C) to get a (T, 768) matrix
+    tile_means = cube.mean(axis=(1, 2))           # (T, 768)
+    
+    #project the tile means onto the PCA components
+    scores = pca.transform(tile_means)               # (T, 3)
+    evr = pca.explained_variance_ratio_
+    print(f"[{modality}] PCA on first image ({R*C} tokens) — EVR={evr[:num_components].round(3).tolist()}") 
+    
+    #fusion PC1, PC2, PC3 into a single value for visualization
+    mn, mx = scores.min(axis=0), scores.max(axis=0)
+    rgb = (scores - mn) / (mx - mn) #normalize to [0,1]
+
+    dates = pd.to_datetime([_by_date_any(p) for p in paths])
+    wins = [_by_win(p) for p in paths]
+    labels = [f"{d.strftime('%Y-%m-%d')} ({w})" for d, w in zip(dates, wins)]
+    colors = [WIN_COLORS[w] for w in wins]
+
+    #plot 1: RGB image of the PCA scores over time
+    fig, ax = plt.subplots(figsize=(12, 2.5))
+    ax.imshow(rgb[None,:,:], aspect="auto") #auto is to stretch the image to fill the axes
+    ax.set_yticks([])
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=45, ha="right")
+    ax.set_title(f"PCA RGB (PC1=R, PC2=G, PC3=B; var: {pca.explained_variance_ratio_.sum():.1%}) — "
+                f"fid {fid}, tile {tile}, {modality} — {_VERSION}")
+    
+    # plot 2: PC1 only (identical style to most-variable-dim)
+    plt.figure(figsize=(10, 4))
+    plt.plot(dates, scores[:, 0], "-", color="gray", alpha=0.5)
+    plt.scatter(dates, scores[:, 0], c=colors, s=70,
+                edgecolors="black", linewidths=0.5, zorder=3)
+    plt.title(f"PCA PC1 (var: {evr[0]:.1%}) — fid {fid}, tile {tile}, {modality} — {_VERSION}")
+    plt.ylabel("PC1 score")
+    plt.xticks(rotation=45); plt.grid(alpha=0.3)
+    plt.legend(
+        handles=[Patch(facecolor=c, label=w) for w, c in WIN_COLORS.items() if w in wins],
+        title="window",
+    )
+    plt.tight_layout(); plt.show()
+
+    # plot 3: PC1, PC2, PC3 as three lines on one plot
+    pc_colors = ["tab:purple", "tab:orange", "tab:cyan"]   # one per component
+
+    plt.figure(figsize=(10, 4))
+    for k in range(scores.shape[1]):
+        plt.plot(dates, scores[:, k], "-", color=pc_colors[k], alpha=0.7, zorder=1)
+        plt.scatter(dates, scores[:, k], c=colors, s=70,
+                    edgecolors="black", linewidths=0.5, zorder=3)
+
+    # two legends: window (point color) + component (line color)
+    win_handles = [Patch(facecolor=c, label=w) for w, c in WIN_COLORS.items() if w in wins]
+    pc_handles = [plt.Line2D([0], [0], color=pc_colors[k], lw=2, label=f"PC{k+1} ({evr[k]:.1%})")
+                for k in range(scores.shape[1])]
+    leg1 = plt.legend(handles=win_handles, title="window", loc="upper left")
+    plt.gca().add_artist(leg1)
+    plt.legend(handles=pc_handles, title="component", loc="upper right")
+
+    plt.title(f"PCA PC1–PC3 — fid {fid}, tile {tile}, {modality} — {_VERSION}")
+    plt.ylabel("PC score")
+    plt.xticks(rotation=45); plt.grid(alpha=0.3)
+    plt.tight_layout(); plt.show()
 
 def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
                        top_k: int = 5):
@@ -395,6 +485,7 @@ def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
         _show_tile_with_pixel(fid, tile, pix_row, pix_col, rgb_tile, poly_pix)
     else:
         print(f"[run] using explicit token ({tok_r},{tok_c})")
+        _show_explicit_token(fid, tile, tok_r, tok_c)
 
     for modality in ("optical", "sar", "joint"):
         _cosine_sim_plot(fid, tile, tok_r, tok_c, modality, allowed_s2, allowed_s1)
@@ -403,6 +494,7 @@ def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
 
     for modality in ("optical", "sar", "joint"):
         _most_variable_dim(fid, tile, modality, allowed_s2, allowed_s1)
+        _pca_first_image(fid, tile, modality, allowed_s2, allowed_s1)
 
     _optical_rgb_grid(fid, tile, allowed_s2)
     _vh_time_series(fid, tile, tok_r, tok_c, allowed_s1)
