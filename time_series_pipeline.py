@@ -286,15 +286,23 @@ def _pca_first_image(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
         print(f"[{modality}] no embeddings after filter — skipping PCA")
         return
 
+    #cube depending on the version of cloud filter
     cube = np.stack([np.load(p) for p in paths])
     #time, rows, cols, dims 
     T,R,C,D = cube.shape
     print(f"[{modality}] cube shape: {cube.shape}")
 
+    # COMMON BASE: fit PCA on the first image of the FULL set on disk
+    # (version-independent, so PC1 is comparable across v1/v2/v3)
+    subdir = SUBDIRS[modality]
+    paths_all = sorted(glob.glob(f"{EMB_ROOT}/{subdir}/fid_{fid}/*/*/tile_{tile}.npy"),
+                        key=_by_date_any)
+    cube_all = np.stack([np.load(p) for p in paths_all])
+    
+
     # make PCA on the first image (T=0) and project all images onto the first 3 components
     pca = PCA(n_components=num_components)
-    first_tokens = cube[0].reshape(R*C, D) #flatten rows and columns in one dimension (N_patches, 768)
-    pca.fit(first_tokens)
+    pca.fit(cube_all[0].reshape(R * C, D)) #flatten rows and columns in one dimension (N_patches, 768) and use the cube of all the images
 
     #temporal reduction by doing the mean of each time step (T) over the spatial dimensions (R, C) to get a (T, 768) matrix
     tile_means = cube.mean(axis=(1, 2))           # (T, 768)
