@@ -1,12 +1,9 @@
 """
-Verify the CROMA joint embeddings.
+Random forest at a pixel level
 
-A) Integrity — shape, NaN/Inf, all-zero, basic value stats over a sample.
-B) Signal    — can a SIMPLE classifier (Random Forest) on mean-pooled embeddings
-               separate the disturbance types? FID-split, per-class report.
-
-If B separates the frequent classes well, the embeddings carry signal and a weak
-segmentation is a model problem. If even B fails, the problem is upstream.
+A) Integrity — shape, NaN/Inf, all-zero.
+B) Random forest training and evaluation on a fixed 50% test / 50% train+val split (at FID level, stratified by class).
+C) Learning curve: how test performance changes as the training set grows (N FIDs per
 """
 
 import os
@@ -67,9 +64,9 @@ def load_or_make_split(fid_cls, split_dir="splits", seed=42):
         # warn if there are new FIDs not covered by the saved split
         new_fids = set(map(str, fid_cls.keys())) - test_fids - trainval_fids
         if new_fids:
-            print(f"    [WARN] {len(new_fids)} new FIDs are not in the saved split "
+            print(f"[WARN] {len(new_fids)} new FIDs are not in the saved split "
                   f"and will be ignored: {sorted(new_fids)[:5]}...")
-        print(f"    split loaded from {split_dir}/  (test={len(test_fids)} | trainval={len(trainval_fids)} FIDs)")
+        print(f"split loaded from {split_dir}/  (test={len(test_fids)} | trainval={len(trainval_fids)} FIDs)")
         return test_fids, trainval_fids
 
     # group fids per class
