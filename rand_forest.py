@@ -133,7 +133,7 @@ def make_rf():
 
 
 def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomForest"):
-    ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
+    ds = DisturbanceSegDataset(emb_root, tiles_root, shp, excluded_paths_txt="data_csv/duplicate_images.txt")
     X, y, fids = build_pixel_dataset(ds)
     print(f"\n[B] {model_name} | {len(X)} pixels | {len(set(fids.tolist()))} FIDs | "
           f"classes={sorted(set(y.tolist()))}")
@@ -169,11 +169,11 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     N FIDs per class (with all their pixels), with N growing on a log schedule
     (2, 4, 8, ... up to the largest per-class FID count). For each N we train a
     fresh model, evaluate on the fixed test set, and average over `n_repeats`
-    random FID draws to smooth the noise. Results are printed only (nothing is
+    random FID draws to smooth the noise???. Results are printed only (nothing is
     saved). The FID draws are seeded independently of the model, so calling this
     with different models reuses the EXACT same FIDs -> the curves are comparable.
     """
-    ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
+    ds = DisturbanceSegDataset(emb_root, tiles_root, shp, excluded_paths_txt="data_csv/duplicate_images.txt")
     X, y, fids = build_pixel_dataset(ds)
     fids_str = fids.astype(str)
 

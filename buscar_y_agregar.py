@@ -16,7 +16,7 @@ import glob
 from pathlib import Path
 
 EMB_ROOT = "embeddings"          # ajusta si tu carpeta de embeddings tiene otro nombre/ruta
-TXT_PATH = "imagenes_duplicadas.txt"
+TXT_PATH = "data_csv/duplicate_images.txt"
 
 def main(fecha):
     # busca en todas las carpetas de embeddings que tengan esa fecha en el nombre
