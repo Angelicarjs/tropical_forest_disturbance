@@ -278,8 +278,8 @@ def _ndvi_profile(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s2,
     plt.tight_layout(); plt.show()
 
 
-def _pca_first_image(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
-                     num_components: int = 3):
+def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
+                     allowed_s2, allowed_s1, num_components: int = 3):
     # create the cube of embeddings for this fid/tile/modality
     paths = _paths_for(fid, tile, modality, allowed_s2, allowed_s1)
     if not paths:
@@ -304,11 +304,11 @@ def _pca_first_image(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
     pca = PCA(n_components=num_components)
     pca.fit(cube_all[0].reshape(R * C, D)) #flatten rows and columns in one dimension (N_patches, 768) and use the cube of all the images
 
-    #temporal reduction by doing the mean of each time step (T) over the spatial dimensions (R, C) to get a (T, 768) matrix
-    tile_means = cube.mean(axis=(1, 2))           # (T, 768)
-    
-    #project the tile means onto the PCA components
-    scores = pca.transform(tile_means)               # (T, 3)
+    #single-token time series: pick the (tok_r, tok_c) token at every time step -> (T, 768)
+    token = cube[:, tok_r, tok_c, :]              # (T, 768)
+
+    #project the token series onto the PCA components
+    scores = pca.transform(token)                    # (T, 3)
     evr = pca.explained_variance_ratio_
     print(f"[{modality}] PCA on first image ({R*C} tokens) — EVR={evr[:num_components].round(3).tolist()}") 
     
@@ -502,7 +502,7 @@ def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
 
     for modality in ("optical", "sar", "joint"):
         _most_variable_dim(fid, tile, modality, allowed_s2, allowed_s1)
-        _pca_first_image(fid, tile, modality, allowed_s2, allowed_s1)
+        _pca_first_image(fid, tile, tok_r, tok_c, modality, allowed_s2, allowed_s1)
 
     _optical_rgb_grid(fid, tile, allowed_s2)
     _vh_time_series(fid, tile, tok_r, tok_c, allowed_s1)
