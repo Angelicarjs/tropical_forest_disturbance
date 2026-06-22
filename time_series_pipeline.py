@@ -151,6 +151,16 @@ def _load_polygon(fid: int):
     return gdf, gdf[gdf["fid"] == str(fid)].geometry.iloc[0]
 
 
+def _event_date(fid: int):
+    """Official disturbance detection date (VIEW_DATE) for this fid, or None."""
+    gdf = gpd.read_file(SHP_PATH)
+    gdf["fid"] = gdf["fid"].astype(int)
+    sub = gdf[gdf["fid"] == int(fid)]
+    if sub.empty or pd.isna(sub["VIEW_DATE"].iloc[0]):
+        return None
+    return pd.to_datetime(sub["VIEW_DATE"].iloc[0])
+
+
 def _first_s2_tile(fid: int, tile: int) -> str:
     matches = sorted(glob.glob(f"{TILES_ROOT}/s2_l2a/fid_{fid}/*/*/tile_{tile}.tif"))
     if not matches:
@@ -320,6 +330,7 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     wins = [_by_win(p) for p in paths]
     labels = [f"{d.strftime('%Y-%m-%d')} ({w})" for d, w in zip(dates, wins)]
     colors = [WIN_COLORS[w] for w in wins]
+    evt = _event_date(fid)                       # disturbance detection date (VIEW_DATE)
 
     #plot 1: RGB image of the PCA scores over time
     fig, ax = plt.subplots(figsize=(12, 2.5))
@@ -327,6 +338,9 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     ax.set_yticks([])
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=45, ha="right")
+    if evt is not None:                          # map event date to a fractional x position
+        x_evt = np.interp(evt.value, [d.value for d in dates], range(len(dates)))
+        ax.axvline(x_evt, color="black", ls="--", lw=1.5, label="event")
     ax.set_title(f"PCA RGB (PC1=R, PC2=G, PC3=B; var: {pca.explained_variance_ratio_.sum():.1%}) — "
                 f"fid {fid}, tile {tile}, {modality} — {_VERSION}")
     
@@ -335,6 +349,8 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     plt.plot(dates, scores[:, 0], "-", color="gray", alpha=0.5)
     plt.scatter(dates, scores[:, 0], c=colors, s=70,
                 edgecolors="black", linewidths=0.5, zorder=3)
+    if evt is not None:
+        plt.axvline(evt, color="black", ls="--", lw=1.5, label="event")
     plt.title(f"PCA PC1 (var: {evr[0]:.1%}) — fid {fid}, tile {tile}, {modality} — {_VERSION}")
     plt.ylabel("PC1 score")
     plt.xticks(rotation=45); plt.grid(alpha=0.3)
@@ -352,6 +368,8 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
         plt.plot(dates, scores[:, k], "-", color=pc_colors[k], alpha=0.7, zorder=1)
         plt.scatter(dates, scores[:, k], c=colors, s=70,
                     edgecolors="black", linewidths=0.5, zorder=3)
+    if evt is not None:
+        plt.axvline(evt, color="black", ls="--", lw=1.5)
 
     # two legends: window (point color) + component (line color)
     win_handles = [Patch(facecolor=c, label=w) for w, c in WIN_COLORS.items() if w in wins]
