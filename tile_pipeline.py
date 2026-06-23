@@ -24,6 +24,13 @@ Deduplication:
   Merges v1, v2, v3 CSVs and deduplicates (fid, image_id, window, sensor) tuples
   so each image is downloaded only once even if it appears in multiple filter versions.
 
+  Border-straddle granules: a polygon crossing an MGRS boundary produces one S2
+  image id per granule for the same date (e.g. ..._T20LMR and ..._T20LNR). These
+  are grouped by acquisition (datatake) and, per tile, only the granule with the
+  least nodata is kept. A tile is discarded (never written) when even the best
+  granule is more than --max-empty nodata (default 0.5), which drops the 71% /
+  100%-empty border tiles outright.
+
 Usage:
   python tile_pipeline.py                          # Process all FIDs at 120x120 (sequential)
   python tile_pipeline.py --tile-size 224          # Download at 224x224 (TerraFM native)
@@ -49,6 +56,7 @@ import multiprocessing as mp
 from shapely.geometry import shape, box
 from shapely.ops import transform as shapely_transform
 from pyproj import Transformer
+from rasterio.io import MemoryFile
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Configuration
@@ -99,6 +107,9 @@ MAX_RETRIES = 5
 BASE_DELAY = 2
 REQUEST_DELAY = 0.3
 
+# Discard a tile if more than this fraction of its pixels are nodata (all-band-zero)
+DEFAULT_MAX_EMPTY = 0.5
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging
 # ──────────────────────────────────────────────────────────────────────────────
@@ -145,15 +156,45 @@ def create_tile_grid(polygon_3857, tile_size_m):
     return tiles
 
 
+def group_s2_by_datatake(image_ids):
+    """Group S2 image ids that share an acquisition (datatake) but differ only
+    in the MGRS granule token, e.g.
+        20230604T142721_20230604T142716_T20LMR
+        20230604T142721_20230604T142716_T20LNR
+    -> both map to '20230604T142721_20230604T142716'. These are the
+    border-straddle duplicates: same date, neighbouring granules. Distinct
+    dates fall into distinct groups, so the time series is preserved.
+
+    Returns {datatake_id: [granule_image_id, ...]}.
+    """
+    groups = {}
+    for img_id in image_ids:
+        head, _, tail = img_id.rpartition('_')
+        # An MGRS granule token looks like 'T20LMR' (T + 5 alphanumerics)
+        if head and tail.startswith('T') and len(tail) == 6:
+            acq = head
+        else:
+            acq = img_id          # no recognisable granule token; treat as unique
+        groups.setdefault(acq, []).append(img_id)
+    return groups
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # GEE download
 # ──────────────────────────────────────────────────────────────────────────────
 
-def download_tile(image, bands, tile_bounds_3857, output_path, tile_size_px):
-    """Download a single NxN tile at 10m resolution."""
-    if os.path.exists(output_path):
-        return True
+def fetch_tile(image, bands, tile_bounds_3857, tile_size_px):
+    """Fetch one NxN tile at 10m from GEE without writing it.
 
+    Returns (status, geotiff_bytes, empty_frac):
+      - ('ok', bytes, frac)    successful fetch; frac = fraction of all-band-zero pixels
+      - ('empty', None, 1.0)   GEE reported no valid pixels for this region
+      - ('error', None, 1.0)   all retries failed
+
+    The caller decides whether to keep the bytes: among the granules of one
+    acquisition it keeps the lowest frac, and only if it is below the empty
+    threshold.
+    """
     minx, miny, maxx, maxy = tile_bounds_3857
 
     request = {
@@ -172,16 +213,18 @@ def download_tile(image, bands, tile_bounds_3857, output_path, tile_size_px):
     for attempt in range(MAX_RETRIES):
         try:
             result = ee.data.computePixels(request)
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            with open(output_path, 'wb') as f:
-                f.write(result)
+            # Decode in memory to measure how much of the tile is nodata. A pixel
+            # counts as empty only when ALL bands are 0 (the value GEE writes for
+            # pixels outside the image/granule footprint).
+            with MemoryFile(result) as mem, mem.open() as ds:
+                arr = ds.read()
+            empty_frac = float((arr == 0).all(axis=0).mean())
             time.sleep(REQUEST_DELAY)
-            return True
+            return 'ok', result, empty_frac
         except ee.ee_exception.EEException as e:
             error_msg = str(e)
             if 'No valid pixels' in error_msg or 'empty' in error_msg.lower():
-                logger.warning(f"No valid pixels: {output_path}")
-                return False
+                return 'empty', None, 1.0
             delay = BASE_DELAY * (2 ** attempt)
             logger.warning(f"GEE error (attempt {attempt+1}/{MAX_RETRIES}): {error_msg}")
             time.sleep(delay)
@@ -190,8 +233,8 @@ def download_tile(image, bands, tile_bounds_3857, output_path, tile_size_px):
             logger.warning(f"Error (attempt {attempt+1}/{MAX_RETRIES}): {e}")
             time.sleep(delay)
 
-    logger.error(f"Failed after {MAX_RETRIES} attempts: {output_path}")
-    return False
+    logger.error(f"Failed after {MAX_RETRIES} attempts")
+    return 'error', None, 1.0
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -297,7 +340,7 @@ def parse_and_merge_csvs(csv_dir, first_only=False):
 # Processing logic
 # ──────────────────────────────────────────────────────────────────────────────
 
-def process_fid(record, completed, output_base, products, tile_size_px):
+def process_fid(record, completed, output_base, products, tile_size_px, max_empty):
     """Download all tiles for a single FID across all requested products."""
     fid = record['fid']
     tile_size_m = tile_size_px * 10
@@ -321,32 +364,81 @@ def process_fid(record, completed, output_base, products, tile_size_px):
         if not sensor_products:
             continue
 
-        for image_id in image_ids:
-            safe_id = image_id.replace('/', '_')
+        # Group granules of the SAME acquisition. For S2 a polygon straddling an
+        # MGRS boundary yields one image id per granule (..._T20LMR, ..._T20LNR)
+        # for the same date -> duplicates of each other. Different dates stay in
+        # different groups so the time series is untouched. S1 has no MGRS grid,
+        # so each id is its own group.
+        if sensor == 's2':
+            acq_groups = group_s2_by_datatake(image_ids)
+        else:
+            acq_groups = {img_id: [img_id] for img_id in image_ids}
 
-            for product in sensor_products:
-                collection_id = COLLECTIONS[product]
-                bands = PRODUCT_BANDS[product]
+        for product in sensor_products:
+            collection_id = COLLECTIONS[product]
+            bands = PRODUCT_BANDS[product]
 
-                try:
-                    image = ee.Image(collection_id + '/' + image_id)
-                except Exception as e:
-                    logger.error(f"FID {fid}: failed to create image {collection_id}/{image_id}: {e}")
-                    continue
+            for acq_id, granule_ids in acq_groups.items():
+                safe_acq = acq_id.replace('/', '_')
 
                 for tile_idx, tile in enumerate(tiles):
-                    key = f"{product}|{fid}|{window}|{safe_id}|tile_{tile_idx}"
-                    if key in completed:
+                    # One completed key per (acquisition, tile), independent of
+                    # which granule ends up winning.
+                    tile_key = f"{product}|{fid}|{window}|{safe_acq}|tile_{tile_idx}"
+                    if tile_key in completed:
                         continue
 
-                    path = os.path.join(
-                        output_base, product, f'fid_{fid}',
-                        window, safe_id, f'tile_{tile_idx}.tif'
-                    )
+                    # Resume backstop: already written under any granule folder.
+                    if any(os.path.exists(os.path.join(
+                            output_base, product, f'fid_{fid}', window,
+                            gid.replace('/', '_'), f'tile_{tile_idx}.tif'))
+                           for gid in granule_ids):
+                        completed.add(tile_key)
+                        continue
 
-                    if download_tile(image, bands, tile.bounds, path, tile_size_px):
-                        completed.add(key)
+                    # Fetch the tile from every granule of this acquisition and
+                    # keep the one with the least nodata. Discard the tile if even
+                    # the best is more than `max_empty` nodata (border gap / no
+                    # coverage) -> this drops the 71% / 100%-empty tiles.
+                    best = None          # (empty_frac, safe_granule_id, geotiff_bytes)
+                    any_error = False
+                    for granule_id in granule_ids:
+                        try:
+                            image = ee.Image(collection_id + '/' + granule_id)
+                        except Exception as e:
+                            logger.error(f"FID {fid}: failed to create image "
+                                         f"{collection_id}/{granule_id}: {e}")
+                            any_error = True
+                            continue
+
+                        status, result, frac = fetch_tile(
+                            image, bands, tile.bounds, tile_size_px)
+                        if status == 'ok' and frac <= max_empty:
+                            if best is None or frac < best[0]:
+                                best = (frac, granule_id.replace('/', '_'), result)
+                            if frac <= 0.0:
+                                break   # fully covered: cannot do better, skip the rest
+                        elif status == 'error':
+                            any_error = True
+
+                    if best is not None:
+                        _, safe_id, result = best
+                        path = os.path.join(
+                            output_base, product, f'fid_{fid}',
+                            window, safe_id, f'tile_{tile_idx}.tif'
+                        )
+                        os.makedirs(os.path.dirname(path), exist_ok=True)
+                        with open(path, 'wb') as f:
+                            f.write(result)
+                        completed.add(tile_key)
                         total_downloads += 1
+                    elif not any_error:
+                        # Empty (or too empty) in every granule -> record as done
+                        # so a --resume run does not keep retrying it.
+                        completed.add(tile_key)
+                        logger.warning(
+                            f"FID {fid}: dropped empty tile "
+                            f"{product} {window} {safe_acq} tile_{tile_idx}")
 
     return total_downloads
 
@@ -355,7 +447,7 @@ def process_fid(record, completed, output_base, products, tile_size_px):
 # Parallel worker
 # ──────────────────────────────────────────────────────────────────────────────
 
-def worker_process(worker_id, records, resume, output_base, products, tile_size_px):
+def worker_process(worker_id, records, resume, output_base, products, tile_size_px, max_empty):
     """Independent worker that processes a subset of FIDs."""
     worker_log = os.path.join(_SCRIPT_DIR, f'tile_pipeline_worker_{worker_id}.log')
     fh = logging.FileHandler(worker_log)
@@ -382,7 +474,7 @@ def worker_process(worker_id, records, resume, output_base, products, tile_size_
     for idx, record in enumerate(records):
         logger.info(f"Worker {worker_id}: FID {record['fid']} ({idx+1}/{len(records)})")
         try:
-            dl = process_fid(record, completed, output_base, products, tile_size_px)
+            dl = process_fid(record, completed, output_base, products, tile_size_px, max_empty)
             logger.info(f"Worker {worker_id}: FID {record['fid']} done, {dl} downloads")
             save_worker_progress()
         except Exception as e:
@@ -474,6 +566,11 @@ def main():
                         help='Exact number of FIDs to sample (e.g., 5)')
     parser.add_argument('--workers', type=int, default=1,
                         help='Number of parallel workers (default: 1, recommended: 4-8)')
+    parser.add_argument('--max-empty', type=float, default=DEFAULT_MAX_EMPTY,
+                        help=f'Discard a tile when its fraction of all-nodata pixels '
+                             f'exceeds this (default: {DEFAULT_MAX_EMPTY}). Among duplicate '
+                             f'granules of the same acquisition, the least-empty tile below '
+                             f'this threshold is kept.')
     args = parser.parse_args()
 
     if args.tile_size <= 0:
@@ -543,7 +640,7 @@ def main():
 
         with mp.Pool(processes=n_workers) as pool:
             worker_args = [
-                (i, chunk, args.resume, output_base, products, tile_size_px)
+                (i, chunk, args.resume, output_base, products, tile_size_px, args.max_empty)
                 for i, chunk in enumerate(chunks)
             ]
             results = pool.starmap(worker_process, worker_args)
@@ -573,7 +670,7 @@ def main():
     for idx, record in enumerate(records):
         logger.info(f"Processing FID {record['fid']} ({idx+1}/{total_fids})")
         try:
-            dl = process_fid(record, completed, output_base, products, tile_size_px)
+            dl = process_fid(record, completed, output_base, products, tile_size_px, args.max_empty)
             logger.info(f"FID {record['fid']}: {dl} new downloads")
             save_progress(completed, output_base)
         except Exception as e:
