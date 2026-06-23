@@ -41,6 +41,7 @@ EMB_ROOT = "embeddings"
 SHP_PATH = "data_shp/label_polygons.shp"
 CSV_TEMPLATE = "data_csv/{version}_images_s2_s1.csv"
 _VERSION = "v3"  # current cloud-filter version; set by run(), shown in plot titles
+_VERSIONS = ("v1", "v2", "v3")  # all cloud-filter versions (for the common PCA base)
 
 SUBDIRS = {"optical": "s2_l2a", "sar": "s1_grd", "joint": "joint"}
 WIN_COLORS = {"bef": "tab:blue", "evt": "tab:red", "aft": "tab:green"}
@@ -94,6 +95,24 @@ def _allowed_ids_for_fid(csv_path: str, fid: int) -> dict[str, set[str]]:
             s2_ids.update(_split_ids(row.get(f"{win}IdsS2")))
             s1_ids.update(_split_ids(row.get(f"{win}IdsS1")))
     return {"s2": s2_ids, "s1": s1_ids}
+
+
+def _common_s2_ids_across_versions(fid: int) -> set[str]:
+    """S2 image_ids present for this fid across ALL cloud-filter versions (v1∩v2∩v3).
+
+    Only S2 matters: cloud filtering (what differs between v1/v2/v3) acts on the
+    optical images; the S1↔S2 pairing is resolved elsewhere when embeddings are built.
+    """
+    per_version = [_allowed_ids_for_fid(CSV_TEMPLATE.format(version=v), fid)["s2"]
+                   for v in _VERSIONS]
+    return set.intersection(*per_version)
+
+
+def _first_common_s2_date(fid: int) -> str | None:
+    """Earliest acquisition date (YYYYMMDD) of the S2 images common to every version."""
+    dates = [m.group(1) for i in _common_s2_ids_across_versions(fid)
+             if (m := re.search(r"(\d{8})T", i))]
+    return min(dates) if dates else None
 
 
 def _image_id_of(path: str) -> str:
@@ -302,17 +321,27 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     T,R,C,D = cube.shape
     print(f"[{modality}] cube shape: {cube.shape}")
 
-    # COMMON BASE: fit PCA on the first image of the FULL set on disk
-    # (version-independent, so PC1 is comparable across v1/v2/v3)
+    # COMMON BASE: fit PCA on the image anchored at the earliest S2 date that
+    # survives EVERY cloud filter (v1∩v2∩v3), so PC1 is comparable across versions.
+    # Per modality, take the first on-disk image on/after that common S2 date.
     subdir = SUBDIRS[modality]
     paths_all = sorted(glob.glob(f"{EMB_ROOT}/{subdir}/fid_{fid}/*/*/tile_{tile}.npy"),
                         key=_by_date_any)
-    cube_all = np.stack([np.load(p) for p in paths_all])
-    
+    base_date = _first_common_s2_date(fid)
+    if base_date is None:
+        print(f"[{modality}] no S2 image common to all versions — skipping PCA")
+        return
+    base_paths = [p for p in paths_all if _by_date_any(p) >= base_date]
+    if not base_paths:
+        print(f"[{modality}] no image on/after common S2 date {base_date} — skipping PCA")
+        return
+    base_img = np.load(base_paths[0])            # (R, C, D)
+    print(f"[{modality}] PCA base = {_image_id_of(base_paths[0])} "
+          f"(common S2 date {base_date})")
 
-    # make PCA on the first image (T=0) and project all images onto the first 3 components
+    # make PCA on the common base image (T=0) and project all images onto the first 3 components
     pca = PCA(n_components=num_components)
-    pca.fit(cube_all[0].reshape(R * C, D)) #flatten rows and columns in one dimension (N_patches, 768) and use the cube of all the images
+    pca.fit(base_img.reshape(R * C, D)) #flatten rows and columns in one dimension (N_patches, 768)
 
     #single-token time series: pick the (tok_r, tok_c) token at every time step -> (T, 768)
     token = cube[:, tok_r, tok_c, :]              # (T, 768)
