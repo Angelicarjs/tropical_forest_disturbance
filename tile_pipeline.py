@@ -125,6 +125,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# GDAL emits a cosmetic TIFF-tag warning for GEE's multi-band GeoTIFFs
+# ("ExtraSamples doesn't match SamplesPerPixel"); the pixels read fine, so silence it.
+logging.getLogger('rasterio').setLevel(logging.ERROR)
+logging.getLogger('rasterio._env').setLevel(logging.ERROR)
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Coordinate helpers
 # ──────────────────────────────────────────────────────────────────────────────
