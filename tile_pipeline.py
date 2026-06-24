@@ -184,6 +184,31 @@ def group_s2_by_datatake(image_ids):
     return groups
 
 
+def group_s1_by_datatake(image_ids):
+    """Group S1 GRD ids that belong to the same acquisition (datatake) but are
+    split into consecutive along-track slices, e.g.
+        S1A_IW_GRDH_1SDV_20230322T094910_20230322T094935_047755_05BCAD_F524
+        S1A_IW_GRDH_1SDV_20230322T094935_20230322T095000_047755_05BCAD_A5E4
+    -> both map to datatake '05BCAD' (the second-to-last id field, shared by every
+    slice of one pass). A polygon straddling the slice seam is covered by the union
+    of the slices, so grouping lets fetch_tile pick the least-empty slice per tile
+    instead of dropping the half each slice misses. Distinct datatakes (hence
+    distinct dates) stay in distinct groups, so the time series is preserved.
+
+    Returns {datatake_id: [granule_image_id, ...]}.
+    """
+    groups = {}
+    for img_id in image_ids:
+        parts = img_id.split('_')
+        # S1 GRD id: <mission>_<mode>_<prod>_<pol>_<start>_<stop>_<orbit>_<datatake>_<unique>
+        if len(parts) >= 9:
+            acq = parts[-2]
+        else:
+            acq = img_id          # unrecognised format; treat as unique
+        groups.setdefault(acq, []).append(img_id)
+    return groups
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # GEE download
 # ──────────────────────────────────────────────────────────────────────────────
@@ -371,13 +396,12 @@ def process_fid(record, completed, output_base, products, tile_size_px, max_empt
 
         # Group granules of the SAME acquisition. For S2 a polygon straddling an
         # MGRS boundary yields one image id per granule (..._T20LMR, ..._T20LNR)
-        # for the same date -> duplicates of each other. Different dates stay in
-        # different groups so the time series is untouched. S1 has no MGRS grid,
-        # so each id is its own group.
+        # for the same date -> duplicates of each other.
         if sensor == 's2':
             acq_groups = group_s2_by_datatake(image_ids)
         else:
-            acq_groups = {img_id: [img_id] for img_id in image_ids}
+            # S1 GRD is sliced along-track; group the slices of one datatake
+            acq_groups = group_s1_by_datatake(image_ids)
 
         for product in sensor_products:
             collection_id = COLLECTIONS[product]
