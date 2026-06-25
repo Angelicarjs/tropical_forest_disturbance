@@ -97,20 +97,32 @@ def _allowed_ids_for_fid(csv_path: str, fid: int) -> dict[str, set[str]]:
     return {"s2": s2_ids, "s1": s1_ids}
 
 
-def _common_s2_ids_across_versions(fid: int) -> set[str]:
-    """S2 image_ids present for this fid across ALL cloud-filter versions (v1∩v2∩v3).
+def _on_disk_s2_ids(fid: int, tile: int) -> set[str]:
+    """S2 image_ids whose tile_{tile}.tif survived tile verification on disk.
+
+    Tile verification drops empty/border tiles per (image, tile_idx), so an
+    image listed in the CSVs may have no tile_{tile} on disk for this fid.
+    """
+    return {_image_id_of(p) for p in
+            glob.glob(f"{TILES_ROOT}/s2_l2a/fid_{fid}/*/*/tile_{tile}.tif")}
+
+
+def _common_s2_ids_across_versions(fid: int, tile: int) -> set[str]:
+    """S2 image_ids common to ALL cloud-filter versions (v1∩v2∩v3) AND on disk.
 
     Only S2 matters: cloud filtering (what differs between v1/v2/v3) acts on the
     optical images; the S1↔S2 pairing is resolved elsewhere when embeddings are built.
+    The CSV intersection is further restricted to image_ids whose tile_{tile}
+    actually survived tile verification, so dropped (empty) images are excluded.
     """
     per_version = [_allowed_ids_for_fid(CSV_TEMPLATE.format(version=v), fid)["s2"]
                    for v in _VERSIONS]
-    return set.intersection(*per_version)
+    return set.intersection(*per_version) & _on_disk_s2_ids(fid, tile)
 
 
-def _first_common_s2_date(fid: int) -> str | None:
+def _first_common_s2_date(fid: int, tile: int) -> str | None:
     """Earliest acquisition date (YYYYMMDD) of the S2 images common to every version."""
-    dates = [m.group(1) for i in _common_s2_ids_across_versions(fid)
+    dates = [m.group(1) for i in _common_s2_ids_across_versions(fid, tile)
              if (m := re.search(r"(\d{8})T", i))]
     return min(dates) if dates else None
 
@@ -327,7 +339,7 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     subdir = SUBDIRS[modality]
     paths_all = sorted(glob.glob(f"{EMB_ROOT}/{subdir}/fid_{fid}/*/*/tile_{tile}.npy"),
                         key=_by_date_any)
-    base_date = _first_common_s2_date(fid)
+    base_date = _first_common_s2_date(fid, tile)
     if base_date is None:
         print(f"[{modality}] no S2 image common to all versions — skipping PCA")
         return
