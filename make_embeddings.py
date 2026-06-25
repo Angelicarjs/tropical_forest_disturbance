@@ -123,6 +123,7 @@ def compute_global_stats(product_root, band_indices, min_valid=None, max_valid=N
 
     for p in paths:
         data = load_tile(p, band_indices=band_indices)
+        data[:, (data == 0).all(axis=0)] = np.nan # treat all-zero tiles as nodata
         valid = np.isfinite(data)
         if min_valid is not None:
             valid &= (data > min_valid)
