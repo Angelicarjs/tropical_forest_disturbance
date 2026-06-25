@@ -29,6 +29,11 @@ from make_embeddings import (
 
 CSV_FILES = ["v1_images_s2_s1.csv", "v2_images_s2_s1.csv", "v3_images_s2_s1.csv"]
 
+# FIDs dropped from the dataset: every acquisition has S1 frame-edge nodata
+# (S1 swath border), so they are excluded from embedding generation.
+EXCLUDE_FIDS = {"12", "30", "31", "33", "58", "65", "71", "96",
+                "153", "169", "276", "288", "310", "345"}
+
 
 def main():
     ap = argparse.ArgumentParser(description="Generate CROMA joint (S1+S2) embeddings over the dataset.")
@@ -78,6 +83,8 @@ def main():
             str(csv_path), str(tiles_root), max_gap_days=args.max_gap_days,
         ):
             if keep_fids is not None and str(fid) not in keep_fids:
+                continue
+            if str(fid) in EXCLUDE_FIDS:
                 continue
             key = (str(fid), win, Path(s2_dir).name, Path(s1_dir).name)
             if key in seen:
