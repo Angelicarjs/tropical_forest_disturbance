@@ -320,6 +320,28 @@ def _ndvi_profile(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s2,
     plt.tight_layout(); plt.show()
 
 
+def _fit_common_base_pca(fid: int, tile: int, modality: str, num_components: int = 3):
+    """Fit PCA on the base image anchored at the earliest S2 date common to every
+    cloud-filter version (v1-v2-v3), so PC axes are comparable across versions and
+    modalities.Returns (pca, base_id, base_date) or None if there is no common S2 date / no image after it.
+    """
+    subdir = SUBDIRS[modality]
+    paths_all = sorted(glob.glob(f"{EMB_ROOT}/{subdir}/fid_{fid}/*/*/tile_{tile}.npy"),
+                       key=_by_date_any)
+    if not paths_all:
+        return None
+    base_date = _first_common_s2_date(fid, tile)
+    if base_date is None:
+        return None
+    base_paths = [p for p in paths_all if _by_date_any(p) >= base_date]
+    if not base_paths:
+        return None
+    base_img = np.load(base_paths[0])                       # (R, C, D)
+    R, C, D = base_img.shape
+    pca = PCA(n_components=num_components).fit(base_img.reshape(R * C, D))
+    return pca, _image_id_of(base_paths[0]), base_date
+
+
 def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
                      allowed_s2, allowed_s1, num_components: int = 3):
     # create the cube of embeddings for this fid/tile/modality
@@ -334,27 +356,14 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     T,R,C,D = cube.shape
     print(f"[{modality}] cube shape: {cube.shape}")
 
-    # COMMON BASE: fit PCA on the image anchored at the earliest S2 date that
-    # survives EVERY cloud filter (v1∩v2∩v3), so PC1 is comparable across versions.
-    # Per modality, take the first on-disk image on/after that common S2 date.
-    subdir = SUBDIRS[modality]
-    paths_all = sorted(glob.glob(f"{EMB_ROOT}/{subdir}/fid_{fid}/*/*/tile_{tile}.npy"),
-                        key=_by_date_any)
-    base_date = _first_common_s2_date(fid, tile)
-    if base_date is None:
-        print(f"[{modality}] no S2 image common to all versions — skipping PCA")
+    # COMMON BASE: PCA fitted on the image anchored at the earliest S2 date that
+    # survives EVERY cloud filter (v1-v2-v3), so PC1 is comparable across versions.
+    base = _fit_common_base_pca(fid, tile, modality, num_components)
+    if base is None:
+        print(f"[{modality}] no common-S2 base image — skipping PCA")
         return
-    base_paths = [p for p in paths_all if _by_date_any(p) >= base_date]
-    if not base_paths:
-        print(f"[{modality}] no image on/after common S2 date {base_date} — skipping PCA")
-        return
-    base_img = np.load(base_paths[0])            # (R, C, D)
-    print(f"[{modality}] PCA base = {_image_id_of(base_paths[0])} "
-          f"(common S2 date {base_date})")
-
-    # make PCA on the common base image (T=0) and project all images onto the first 3 components
-    pca = PCA(n_components=num_components)
-    pca.fit(base_img.reshape(R * C, D)) #flatten rows and columns in one dimension (N_patches, 768)
+    pca, base_id, base_date = base
+    print(f"[{modality}] PCA base = {base_id} (common S2 date {base_date})")
 
     #single-token time series: pick the (tok_r, tok_c) token at every time step -> (T, 768)
     token = cube[:, tok_r, tok_c, :]              # (T, 768)
@@ -518,6 +527,87 @@ def _vh_time_series(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s1):
     plt.title(f"VH — fid {fid}, tile {tile}, token ({tok_r},{tok_c}) — {_VERSION}")
     plt.ylabel("VH"); plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.tight_layout(); plt.show()
+
+
+def _plot_series(ax, dates, values, colors, title, line_color="gray", label=None):
+    """Time series on a given ax: background line + points colored by window."""
+    ax.plot(dates, values, "-", color=line_color, alpha=0.6, zorder=1, label=label)
+    ax.scatter(dates, values, c=colors, s=55, edgecolors="black", lw=0.5, zorder=3)
+    ax.set_title(title)
+    ax.tick_params(axis="x", rotation=45)
+    ax.grid(alpha=0.3)
+
+
+def compare_versions_mvd(fid: int, tok_r: int, tok_c: int, tile: int = 0,
+                         modality: str = "optical", versions=_VERSIONS,
+                         max_gap_days: int = 7, num_components: int = 3):
+    """One figure: MVD + PCA (PC1, PC1-PC3) per cloud-filter version for a single
+    (fid, tile, token, modality). PCA is fit ONCE on the common-S2-date base image
+    (same convention as _pca_first_image), so PC axes are comparable across versions.
+    """
+    # make sure embeddings exist (resumable)
+    _create_embeddings(fid, CSV_TEMPLATE.format(version="v3"), max_gap_days)
+
+    subdir = SUBDIRS[modality]
+    paths_all = sorted(glob.glob(f"{EMB_ROOT}/{subdir}/fid_{fid}/*/*/tile_{tile}.npy"),
+                       key=_by_date_any)
+    if not paths_all:
+        print(f"[{modality}] no embeddings on disk — nothing to plot")
+        return
+
+    # COMMON BASE (same anchor as _pca_first_image): PCA fit once on the common-S2 base.
+    base = _fit_common_base_pca(fid, tile, modality, num_components)
+    if base is None:
+        print(f"[{modality}] no common-S2 base image — skipping")
+        return
+    pca, _, _ = base
+    evr = pca.explained_variance_ratio_
+
+    # most-variable dim for this token, fixed across versions (from the full on-disk set)
+    cube_all = np.stack([np.load(p) for p in paths_all])
+    top = int(cube_all[:, tok_r, tok_c, :].std(axis=0).argmax())
+
+    nver = len(versions)
+    fig, axes = plt.subplots(3, nver, figsize=(6 * nver, 12), squeeze=False)
+    pc_colors = ["tab:purple", "tab:orange", "tab:cyan"]
+
+    for j, version in enumerate(versions):
+        ax_mvd, ax_pc1, ax_pc13 = axes[0, j], axes[1, j], axes[2, j]
+        allowed = _allowed_ids_for_fid(CSV_TEMPLATE.format(version=version), fid)
+        paths = _paths_for(fid, tile, modality, allowed["s2"], allowed["s1"])
+        if not paths:
+            for ax in (ax_mvd, ax_pc1, ax_pc13):
+                ax.set_title(f"{version}: no data"); ax.axis("off")
+            continue
+
+        cube = np.stack([np.load(p) for p in paths])   # filtered cube
+        dates = pd.to_datetime([_by_date_any(p) for p in paths])
+        colors = [WIN_COLORS[_by_win(p)] for p in paths]
+        token = cube[:, tok_r, tok_c, :]               # (T, D)
+        scores = pca.transform(token)                  # project onto common base
+
+        _plot_series(ax_mvd, dates, token[:, top], colors,
+                     f"{version} — dim {top} (n={len(paths)})")
+        _plot_series(ax_pc1, dates, scores[:, 0], colors,
+                     f"{version} — PC1 (var {evr[0]:.1%})")
+        for k in range(num_components):
+            _plot_series(ax_pc13, dates, scores[:, k], colors,
+                         f"{version} — PC1-PC3", line_color=pc_colors[k],
+                         label=f"PC{k+1} ({evr[k]:.1%})")
+        ax_pc13.legend(title="component", fontsize=8, loc="upper right")
+
+    fig.legend(handles=[Patch(facecolor=c, label=w) for w, c in WIN_COLORS.items()],
+               title="window", loc="upper left")
+    fig.suptitle(f"MVD + PCA (token {tok_r},{tok_c}, common S2 base) — "
+                 f"fid {fid}, tile {tile}, {modality}", y=1.0)
+    plt.tight_layout(); plt.show()
+
+
+def compare_mvd(fid: int, tok_r: int, tok_c: int, tile: int = 0,
+                modalities=("optical", "sar", "joint")):
+    """Run compare_versions_mvd for several modalities (one figure each)."""
+    for m in modalities:
+        compare_versions_mvd(fid, tok_r=tok_r, tok_c=tok_c, tile=tile, modality=m)
 
 
 def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
