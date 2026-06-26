@@ -4,7 +4,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
-#SBATCH --time=02:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=slurm_embed_%j.log
 
 # --- paths (adjust if yours differ) ---
@@ -20,10 +20,8 @@ cd "$PROJ"
 
 echo "Nodo: $(hostname) | GPU: $CUDA_VISIBLE_DEVICES | Inicio: $(date)"
 
-# TEST: only the 41-FID stratified sample. Remove --fid-list to run on ALL FIDs.
 python embed_all_joint.py \
     --tiles-root "$TILES" \
     --csv-dir "$CSV" \
-    --fid-list "$CSV/sample_10pct_stratified.txt"
 
 echo "Fin: $(date)"

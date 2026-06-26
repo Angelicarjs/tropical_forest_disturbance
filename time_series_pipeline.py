@@ -124,6 +124,7 @@ def _first_common_s2_date(fid: int, tile: int) -> str | None:
     """Earliest acquisition date (YYYYMMDD) of the S2 images common to every version."""
     dates = [m.group(1) for i in _common_s2_ids_across_versions(fid, tile)
              if (m := re.search(r"(\d{8})T", i))]
+    print(min(dates) if dates else None)
     return min(dates) if dates else None
 
 
@@ -373,19 +374,7 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     colors = [WIN_COLORS[w] for w in wins]
     evt = _event_date(fid)                       # disturbance detection date (VIEW_DATE)
 
-    #plot 1: RGB image of the PCA scores over time
-    fig, ax = plt.subplots(figsize=(12, 2.5))
-    ax.imshow(rgb[None,:,:], aspect="auto") #auto is to stretch the image to fill the axes
-    ax.set_yticks([])
-    ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=45, ha="right")
-    if evt is not None:                          # map event date to a fractional x position
-        x_evt = np.interp(evt.value, [d.value for d in dates], range(len(dates)))
-        ax.axvline(x_evt, color="black", ls="--", lw=1.5, label="event")
-    ax.set_title(f"PCA RGB (PC1=R, PC2=G, PC3=B; var: {pca.explained_variance_ratio_.sum():.1%}) — "
-                f"fid {fid}, tile {tile}, {modality} — {_VERSION}")
-    
-    # plot 2: PC1 only (identical style to most-variable-dim)
+    # plot 1: PC1 only (identical style to most-variable-dim)
     plt.figure(figsize=(10, 4))
     plt.plot(dates, scores[:, 0], "-", color="gray", alpha=0.5)
     plt.scatter(dates, scores[:, 0], c=colors, s=70,
@@ -401,7 +390,7 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     )
     plt.tight_layout(); plt.show()
 
-    # plot 3: PC1, PC2, PC3 as three lines on one plot
+    # plot 2: PC1, PC2, PC3 as three lines on one plot
     pc_colors = ["tab:purple", "tab:orange", "tab:cyan"]   # one per component
 
     plt.figure(figsize=(10, 4))
