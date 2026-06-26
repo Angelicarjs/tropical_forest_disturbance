@@ -193,6 +193,12 @@ def _event_date(fid: int):
     return pd.to_datetime(sub["VIEW_DATE"].iloc[0])
 
 
+def _add_event_line(ax, event_date):
+    """Dashed vertical line at the disturbance event date (VIEW_DATE)."""
+    if event_date is not None:
+        ax.axvline(event_date, color="black", ls="--", lw=1.5, zorder=0)
+
+
 def _first_s2_tile(fid: int, tile: int) -> str:
     matches = sorted(glob.glob(f"{TILES_ROOT}/s2_l2a/fid_{fid}/*/*/tile_{tile}.tif"))
     if not matches:
@@ -314,6 +320,7 @@ def _ndvi_profile(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s2,
                    markerfacecolor=WIN_COLORS[w], label=w, markersize=8)
         for w in ("bef", "evt", "aft") if w in wins
     ]
+    _add_event_line(plt.gca(), _event_date(fid))
     plt.legend(handles=handles, loc="best")
     plt.title(f"NDVI — fid {fid}, tile {tile}, token ({tok_r},{tok_c}) — {_VERSION}")
     plt.ylabel("NDVI"); plt.xticks(rotation=45); plt.grid(alpha=0.3)
@@ -448,6 +455,7 @@ def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s
     plt.plot(dates, tile_means[:, top_dim], "-", color="gray", alpha=0.5)
     plt.scatter(dates, tile_means[:, top_dim], c=colors, s=70,
                 edgecolors="black", linewidths=0.5, zorder=3)
+    _add_event_line(plt.gca(), _event_date(fid))
     plt.title(f"Dim {top_dim} (std={dim_scores[top_dim]:.3f}) — fid {fid}, tile {tile}, {modality} — {_VERSION}")
     plt.ylabel(f"embedding value (dim {top_dim})")
     plt.xticks(rotation=45); plt.grid(alpha=0.3)
@@ -523,6 +531,7 @@ def _vh_time_series(fid: int, tile: int, tok_r: int, tok_c: int, allowed_s1):
                    markerfacecolor=WIN_COLORS[w], label=w, markersize=8)
         for w in ("bef", "evt", "aft") if w in wins
     ]
+    _add_event_line(plt.gca(), _event_date(fid))
     plt.legend(handles=handles, loc="best")
     plt.title(f"VH — fid {fid}, tile {tile}, token ({tok_r},{tok_c}) — {_VERSION}")
     plt.ylabel("VH"); plt.xticks(rotation=45); plt.grid(alpha=0.3)
@@ -570,6 +579,7 @@ def compare_versions_mvd(fid: int, tok_r: int, tok_c: int, tile: int = 0,
     nver = len(versions)
     fig, axes = plt.subplots(3, nver, figsize=(6 * nver, 12), squeeze=False)
     pc_colors = ["tab:purple", "tab:orange", "tab:cyan"]
+    evt = _event_date(fid)
 
     for j, version in enumerate(versions):
         ax_mvd, ax_pc1, ax_pc13 = axes[0, j], axes[1, j], axes[2, j]
@@ -594,6 +604,8 @@ def compare_versions_mvd(fid: int, tok_r: int, tok_c: int, tile: int = 0,
             _plot_series(ax_pc13, dates, scores[:, k], colors,
                          f"{version} — PC1-PC3", line_color=pc_colors[k],
                          label=f"PC{k+1} ({evr[k]:.1%})")
+        for ax in (ax_mvd, ax_pc1, ax_pc13):
+            _add_event_line(ax, evt)
         ax_pc13.legend(title="component", fontsize=8, loc="upper right")
 
     fig.legend(handles=[Patch(facecolor=c, label=w) for w, c in WIN_COLORS.items()],
