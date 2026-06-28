@@ -35,24 +35,14 @@ NUM_CLASSES = len(CLASS_TO_ID) + 1  # +1 for background
 
 class DisturbanceSegDataset(Dataset):
     def __init__(self, embeddings_root, tiles_root, shp_path,
-                 windows=("evt", "aft"), excluded_paths_txt=None):
+                 windows=("evt", "aft")):
         """
         embeddings_root: .../embeddings  (contains joint/)
         tiles_root:      .../thesis_tiles_120px  (contains s2_l2a/)
         shp_path:        .../label_polygons.shp
-        excluded_paths_txt: optional path to a .txt with one
-            "s2_l2a/fid_<fid>/<window>/<s2_id>" path per line (e.g. the
-            border-duplicate images that were deleted from tiles_root).
-            Samples matching these are skipped before any .tif is opened,
-            so __getitem__ never hits a missing-file error.
         """
         self.tiles_root = Path(tiles_root)
         self.windows = set(windows)
-
-        excluded = set()
-        if excluded_paths_txt is not None:
-            with open(excluded_paths_txt) as f:
-                excluded = {line.strip() for line in f if line.strip()}
 
         # --- Load polygons once, reproject to the tiles' CRS (EPSG:3857) ---
         gdf = gpd.read_file(shp_path)
@@ -81,16 +71,10 @@ class DisturbanceSegDataset(Dataset):
             if fid not in self.fid_polys:
                 continue                  # no label polygon -> skip
             s2_id = pair.split("__")[0]
-            rel_path = f"s2_l2a/fid_{fid}/{window}/{s2_id}"
-            if rel_path in excluded:
-                continue                  # border-duplicate image, .tif was deleted
             self.samples.append({
                 "npy": npy, "fid": fid, "window": window,
                 "s2_id": s2_id, "tile": p.stem,  # "tile_N"
             })
-        if excluded_paths_txt is not None:
-            print(f"    excluded {len(excluded)} duplicate paths from {excluded_paths_txt} "
-                  f"-> {len(self.samples)} samples kept")
         #print('samples (evt+aft):', self.samples[:5])
 
     def __len__(self):
@@ -129,7 +113,6 @@ if __name__ == "__main__":
         embeddings_root="embeddings",
         tiles_root=os.path.expanduser("~/thesis_tiles_120px"),
         shp_path="data_shp/label_polygons.shp",
-        excluded_paths_txt="imagenes_duplicadas.txt",
     )
     print(f"samples (evt+aft): {len(ds)}")
     x, y = ds[7]

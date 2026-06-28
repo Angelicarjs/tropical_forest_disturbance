@@ -15,6 +15,7 @@ from sklearn.metrics import classification_report, accuracy_score, f1_score
 from collections import defaultdict
 import numpy as np
 from seg_dataset import DisturbanceSegDataset, CLASS_TO_ID, NUM_CLASSES
+import matplotlib.pyplot as plt
 
 ID_TO_CLASS = {v: k for k, v in CLASS_TO_ID.items()}
 ID_TO_CLASS[0] = "background"
@@ -133,7 +134,7 @@ def make_rf():
 
 
 def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomForest"):
-    ds = DisturbanceSegDataset(emb_root, tiles_root, shp, excluded_paths_txt="data_csv/duplicate_images.txt")
+    ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
     X, y, fids = build_pixel_dataset(ds)
     print(f"\n[B] {model_name} | {len(X)} pixels | {len(set(fids.tolist()))} FIDs | "
           f"classes={sorted(set(y.tolist()))}")
@@ -150,6 +151,33 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     # train+val where in trainval_fids
     tr = np.isin(fids_str, list(trainval_fids))
     print(f"train+val: {tr.sum()} pixels | test: {te.sum()} pixels")
+
+     # token distribution per class (train+val vs test)
+    print(f"\n{'class':<14} {'train+val':>10} {'test':>8}")
+    print("-" * 34)
+    for c in sorted(set(y.tolist())):
+        n_tr = int((y[tr] == c).sum())
+        n_te = int((y[te] == c).sum())
+        print(f"{ID_TO_CLASS[c]:<14} {n_tr:>10} {n_te:>8}")
+    print("-" * 34)
+    print(f"{'TOTAL':<14} {int(tr.sum()):>10} {int(te.sum()):>8}")
+
+    classes = sorted(set(y.tolist()))
+    names = [ID_TO_CLASS[c] for c in classes]
+    n_tr = [int((y[tr] == c).sum()) for c in classes]
+    n_te = [int((y[te] == c).sum()) for c in classes]
+
+    x = np.arange(len(classes)); w = 0.4
+    fig, ax = plt.subplots(figsize=(10, 5))
+    b1 = ax.bar(x - w/2, n_tr, w, label="train+val", color="tab:blue")
+    b2 = ax.bar(x + w/2, n_te, w, label="test", color="tab:orange")
+    ax.axhline(2500, color="red", ls="--", lw=1.5, label="2500 cap")
+    ax.bar_label(b1, fontsize=8); ax.bar_label(b2, fontsize=8)
+    ax.set_xticks(x); ax.set_xticklabels(names, rotation=45, ha="right")
+    ax.set_ylabel("tokens"); ax.set_title("Token distribution per class")
+    ax.legend(); plt.tight_layout()
+    plt.savefig("token_distribution.png", dpi=150, bbox_inches="tight")
+    print("saved token_distribution.png")
 
     clf = make_model()
     clf.fit(X[tr], y[tr])
@@ -173,7 +201,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     saved). The FID draws are seeded independently of the model, so calling this
     with different models reuses the EXACT same FIDs -> the curves are comparable.
     """
-    ds = DisturbanceSegDataset(emb_root, tiles_root, shp, excluded_paths_txt="data_csv/duplicate_images.txt")
+    ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
     X, y, fids = build_pixel_dataset(ds)
     fids_str = fids.astype(str)
 
