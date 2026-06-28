@@ -128,6 +128,25 @@ def build_pixel_dataset(ds):
     return np.concatenate(X, 0), np.concatenate(y, 0), np.concatenate(fids, 0)
 
 
+def balance_classes(y, train_mask, per_class=2500, seed=0):
+    """Class-balance the TRAINING tokens.
+
+    Keeps at most `per_class` tokens per class, drawn at random from the tokens
+    selected by `train_mask`. Classes with fewer than `per_class` tokens keep all
+    of them. Tokens outside `train_mask` (e.g. the test set) are never touched.
+    Returns a new boolean mask over the same array as `train_mask`.
+    """
+    rng = np.random.default_rng(seed)
+    bal = np.zeros_like(train_mask)
+    train_idx = np.flatnonzero(train_mask)
+    for c in np.unique(y[train_idx]):
+        idx_c = train_idx[y[train_idx] == c]
+        if len(idx_c) > per_class:
+            idx_c = rng.choice(idx_c, size=per_class, replace=False)
+        bal[idx_c] = True
+    return bal
+
+
 def make_rf():
     # 300 trees, balanced class weights (unbalanced classes), random_state=0 (reproducible), n_jobs=-1 (cpu in parallel).
     return RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=0, n_jobs=-1)
@@ -152,38 +171,48 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     tr = np.isin(fids_str, list(trainval_fids))
     print(f"train+val: {tr.sum()} pixels | test: {te.sum()} pixels")
 
-     # token distribution per class (train+val vs test)
-    print(f"\n{'class':<14} {'train+val':>10} {'test':>8}")
-    print("-" * 34)
-    for c in sorted(set(y.tolist())):
-        n_tr = int((y[tr] == c).sum())
-        n_te = int((y[te] == c).sum())
-        print(f"{ID_TO_CLASS[c]:<14} {n_tr:>10} {n_te:>8}")
-    print("-" * 34)
-    print(f"{'TOTAL':<14} {int(tr.sum()):>10} {int(te.sum()):>8}")
+    # classes / names — computed once
+    labels = sorted(set(y.tolist()))
+    names = [ID_TO_CLASS[c] for c in labels]
 
-    classes = sorted(set(y.tolist()))
-    names = [ID_TO_CLASS[c] for c in classes]
-    n_tr = [int((y[tr] == c).sum()) for c in classes]
-    n_te = [int((y[te] == c).sum()) for c in classes]
+    # balance training tokens: <= 2500 per class (random); classes with fewer keep all
+    tr_bal = balance_classes(y, tr, per_class=2500)
 
-    x = np.arange(len(classes)); w = 0.4
-    fig, ax = plt.subplots(figsize=(10, 5))
-    b1 = ax.bar(x - w/2, n_tr, w, label="train+val", color="tab:blue")
-    b2 = ax.bar(x + w/2, n_te, w, label="test", color="tab:orange")
+    # per-class counts: train+val before, train+val after, test
+    n_before = [int((y[tr] == c).sum()) for c in labels]
+    n_after  = [int((y[tr_bal] == c).sum()) for c in labels]
+    n_te     = [int((y[te] == c).sum()) for c in labels]
+
+    # table
+    print(f"\n{'class':<14} {'before':>9} {'after':>9} {'test':>8}")
+    print("-" * 42)
+    for name, a, b, t in zip(names, n_before, n_after, n_te):
+        print(f"{name:<14} {a:>9} {b:>9} {t:>8}")
+    print("-" * 42)
+    print(f"{'TOTAL':<14} {int(tr.sum()):>9} {int(tr_bal.sum()):>9} {int(te.sum()):>8}")
+
+    # histogram: before vs after (+ test for reference)
+    x = np.arange(len(labels)); w = 0.27
+    fig, ax = plt.subplots(figsize=(11, 5))
+    b1 = ax.bar(x - w, n_before, w, label="train+val (before)", color="tab:blue")
+    b2 = ax.bar(x,     n_after,  w, label="train+val (after)",  color="tab:green")
+    b3 = ax.bar(x + w, n_te,     w, label="test",               color="tab:orange")
     ax.axhline(2500, color="red", ls="--", lw=1.5, label="2500 cap")
-    ax.bar_label(b1, fontsize=8); ax.bar_label(b2, fontsize=8)
+    for b in (b1, b2, b3):
+        ax.bar_label(b, fontsize=7)
     ax.set_xticks(x); ax.set_xticklabels(names, rotation=45, ha="right")
-    ax.set_ylabel("tokens"); ax.set_title("Token distribution per class")
+    ax.set_ylabel("tokens"); ax.set_title("Token distribution per class — before vs after balancing")
     ax.legend(); plt.tight_layout()
     plt.savefig("token_distribution.png", dpi=150, bbox_inches="tight")
     print("saved token_distribution.png")
 
+    # train on the balanced set
+    tr = tr_bal
+    print(f"\nafter balancing -> {int(tr.sum())} train tokens")
+
     clf = make_model()
     clf.fit(X[tr], y[tr])
     pred = clf.predict(X[te])
-    labels = sorted(set(y.tolist()))
-    names = [ID_TO_CLASS[c] for c in labels]
     print(f"accuracy (test): {accuracy_score(y[te], pred):.3f}\n")
     print(classification_report(y[te], pred, labels=labels, target_names=names, zero_division=0))
 
