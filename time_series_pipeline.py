@@ -27,6 +27,7 @@ from matplotlib.patches import Polygon as MplPolygon
 from rasterio.features import geometry_mask
 from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
+import matplotlib.gridspec as gridspec
 
 from make_embeddings import (
     embed_image,
@@ -108,18 +109,12 @@ def _on_disk_s2_ids(fid: int, tile: int) -> set[str]:
 
 
 def _common_s2_ids_across_versions(fid: int, tile: int) -> set[str]:
-    """S2 image_ids common to ALL cloud-filter versions (v1∩v2∩v3) AND on disk.
-
-    Only S2 matters: cloud filtering (what differs between v1/v2/v3) acts on the
-    optical images; the S1↔S2 pairing is resolved elsewhere when embeddings are built.
-    The CSV intersection is further restricted to image_ids whose tile_{tile}
-    actually survived tile verification, so dropped (empty) images are excluded.
-    """
+    """S2 image_ids common to ALL cloud-filter versions (v1∩v2∩v3) and on disk."""
     per_version = [_allowed_ids_for_fid(CSV_TEMPLATE.format(version=v), fid)["s2"]
                    for v in _VERSIONS]
     return set.intersection(*per_version) & _on_disk_s2_ids(fid, tile)
 
-
+# to print 
 def _first_common_s2_date(fid: int, tile: int) -> str | None:
     """Earliest acquisition date (YYYYMMDD) of the S2 images common to every version."""
     dates = [m.group(1) for i in _common_s2_ids_across_versions(fid, tile)
@@ -621,8 +616,7 @@ def compare_mvd(fid: int, tok_r: int, tok_c: int, tile: int = 0,
     for m in modalities:
         compare_versions_mvd(fid, tok_r=tok_r, tok_c=tok_c, tile=tile, modality=m)
 
-
-def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
+def complete_analysis(fid: int, tile: int, seed: int = 42, version: str = "v3",
         tok_r: int | None = None, tok_c: int | None = None,
         max_gap_days: int = 7) -> dict:
     """Run all notebook steps for (fid, tile) at a token, filtered by `version`."""
@@ -660,3 +654,63 @@ def run(fid: int, tile: int, seed: int = 42, version: str = "v3",
     return {"fid": fid, "tile": tile, "tok_r": tok_r, "tok_c": tok_c,
             "version": version, "csv_path": csv_path,
             "n_allowed_s2": len(allowed_s2), "n_allowed_s1": len(allowed_s1)}
+
+def _s2_tile_for_joint(p, fid, tile):
+      return f"{TILES_ROOT}/s2_l2a/fid_{fid}/{_by_win(p)}/{_image_id_of(p).split('__')[0]}/tile_{tile}.tif"
+
+#nc = number of PCA components to plot
+#vmax = max value for RGB normalization of S2 tile
+def joint_pca_with_thumbs(fid, tile, tok_r, tok_c, version="v3", vmax=3000, nc=3):
+      """Token location + JOINT PCA PC1-PC3 with the S2 RGB tile under each point."""
+      import matplotlib.gridspec as gridspec
+      global _VERSION
+      _VERSION = version
+
+      # 0) token location on the tile (separate figure)
+      _show_explicit_token(fid, tile, tok_r, tok_c)
+
+      allowed = _allowed_ids_for_fid(CSV_TEMPLATE.format(version=version), fid)
+      paths = _paths_for(fid, tile, "joint", allowed["s2"], allowed["s1"])
+      base = _fit_common_base_pca(fid, tile, "joint", nc)
+      if not paths or base is None:
+          print("[joint] nothing to plot"); return
+      pca, evr = base[0], base[0].explained_variance_ratio_
+
+      cube = np.stack([np.load(p) for p in paths])
+      scores = pca.transform(cube[:, tok_r, tok_c, :])         # (T, nc)
+      T = len(paths)
+      dates = [_by_date_any(p) for p in paths]
+      wins = [_by_win(p) for p in paths]
+      colors = [WIN_COLORS[w] for w in wins]
+
+      fig = plt.figure(figsize=(max(10, 1.4 * T), 7.5))
+      gs = gridspec.GridSpec(2, T, height_ratios=[3, 1], hspace=0.35, wspace=0.1)
+
+      # top: PC1-PC3 lines (dates go on the thumbnails, not here)
+      ax = fig.add_subplot(gs[0, :])
+      for k in range(nc):
+          ax.plot(range(T), scores[:, k], "-", alpha=0.7, label=f"PC{k+1} ({evr[k]:.1%})")
+          ax.scatter(range(T), scores[:, k], c=colors, s=70, edgecolors="black", lw=0.5, zorder=3)
+
+      # event date (VIEW_DATE) as a dashed line, interpolated to index position
+      evt = _event_date(fid)
+      if evt is not None:
+          dts = pd.to_datetime([d[:8] for d in dates])
+          pos = float(np.interp(evt.value, [t.value for t in dts], range(T)))
+          ax.axvline(pos, color="black", ls="--", lw=1.5, zorder=0, label="event")
+
+      ax.set_xlim(-0.5, T - 0.5); ax.set_xticks(range(T)); ax.set_xticklabels([])
+      ax.set_ylabel("PC score"); ax.grid(alpha=0.3); ax.legend(title="component", fontsize=8)
+      ax.set_title(f"JOINT PCA PC1-PC3 — fid {fid}, tile {tile}, token ({tok_r},{tok_c}) — {version}")
+
+      # bottom: one S2 RGB thumbnail per point, date as title colored by window
+      for i, p in enumerate(paths):
+          axi = fig.add_subplot(gs[1, i])
+          with rasterio.open(_s2_tile_for_joint(p, fid, tile)) as src:
+              axi.imshow(src.read([4, 3, 2]).transpose(1, 2, 0) / vmax, vmin=0, vmax=1)
+          d = dates[i]
+          axi.set_title(f"{d[:4]}-{d[4:6]}-{d[6:8]}\n({wins[i]})", fontsize=7, color=colors[i])
+          axi.axis("off")
+      plt.show()
+
+
