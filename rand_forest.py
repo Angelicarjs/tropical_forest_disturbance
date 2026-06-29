@@ -147,9 +147,11 @@ def balance_classes(y, train_mask, per_class=2500, seed=0):
     return bal
 
 
+
 def make_rf():
-    # 300 trees, balanced class weights (unbalanced classes), random_state=0 (reproducible), n_jobs=-1 (cpu in parallel).
-    return RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=0, n_jobs=-1)
+    # 1000 trees, balanced class weights (unbalanced classes), random_state=0 (reproducible), n_jobs=n_jobs (cpu in parallel).
+    n_jobs=int(os.environ.get("SLURM_CPUS_PER_TASK", -1)) #based on sh parallelization
+    return RandomForestClassifier(n_estimators=1000, class_weight="balanced", random_state=0, n_jobs=n_jobs)
 
 
 def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomForest"):
