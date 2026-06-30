@@ -218,6 +218,11 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     print(f"accuracy (test): {accuracy_score(y[te], pred):.3f}\n")
     print(classification_report(y[te], pred, labels=labels, target_names=names, zero_division=0))
 
+    # print the chosen C if the model tuned it internally
+    final = clf.steps[-1][1] if hasattr(clf, "steps") else clf
+    if hasattr(final, "C_"):
+        print(f"selected C per class: {final.C_}")
+
 
 def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
                    make_model=make_rf, model_name="RandomForest"):

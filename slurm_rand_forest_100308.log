@@ -1,1 +1,52 @@
 Node: sn1 | CPUs: 6 | Start: lun. 29 juin 2026 11:00:33 CEST
+[A] total .npy in joint/: 9619
+    checked 300:  bad_shape=0  nan/inf=0  all_zero=0
+
+[B] RandomForest | 422775 pixels | 348 FIDs | classes=[0, 1, 2, 3, 4, 5, 6]
+[WARN] 3 new FIDs are not in the saved split and will be ignored: ['12', '153', '69']...
+split loaded from splits/  (test=171 | trainval=174 FIDs)
+train+val: 205425 pixels | test: 213075 pixels
+
+class             before     after     test
+------------------------------------------
+background        181649      2500   188246
+Clear-cut bare soil      7810      2500     8358
+Fire scar            918       918      835
+Degradation         1782      1782     2731
+Disorderly Selective logging     12807      2500     4832
+Clear-cut vegetation       310       310      266
+Geometric Selective logging       149       149     7807
+------------------------------------------
+TOTAL             205425     10659   213075
+saved token_distribution.png
+
+after balancing -> 10659 train tokens
+accuracy (test): 0.563
+
+                              precision    recall  f1-score   support
+
+                  background       0.98      0.58      0.72    188246
+         Clear-cut bare soil       0.17      0.85      0.28      8358
+                   Fire scar       0.07      0.21      0.10       835
+                 Degradation       0.06      0.16      0.09      2731
+Disorderly Selective logging       0.08      0.81      0.15      4832
+        Clear-cut vegetation       0.02      0.05      0.03       266
+ Geometric Selective logging       0.34      0.01      0.01      7807
+
+                    accuracy                           0.56    213075
+                   macro avg       0.24      0.38      0.20    213075
+                weighted avg       0.88      0.56      0.66    213075
+
+[WARN] 3 new FIDs are not in the saved split and will be ignored: ['12', '153', '69']...
+split loaded from splits/  (test=171 | trainval=174 FIDs)
+
+[C] learning curve | RandomForest | max FIDs/class=121 | N schedule=[2, 4, 8, 16, 32, 64, 121] | repeats=3
+     N/class  train_px            acc        f1_dist         f1_all
+           2     15075   0.882±0.000   0.000±0.000   0.134±0.000
+           4     30000   0.877±0.005   0.002±0.003   0.135±0.002
+           8     56925   0.872±0.004   0.005±0.003   0.137±0.002
+          16     88275   0.867±0.000   0.008±0.001   0.139±0.001
+          32    111075   0.866±0.000   0.010±0.001   0.141±0.001
+          64    143325   0.864±0.000   0.009±0.002   0.141±0.001
+         121    205425   0.861±0.000   0.011±0.000   0.141±0.000
+End: lun. 29 juin 2026 17:24:58 CEST
