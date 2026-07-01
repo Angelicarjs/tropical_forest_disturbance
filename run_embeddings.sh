@@ -20,8 +20,9 @@ cd "$PROJ"
 
 echo "Nodo: $(hostname) | GPU: $CUDA_VISIBLE_DEVICES | Inicio: $(date)"
 
-python embed_all_joint.py \
+python embed_all.py \
     --tiles-root "$TILES" \
     --csv-dir "$CSV" \
+    --modality "optical" \
 
 echo "Fin: $(date)"
