@@ -3,7 +3,7 @@ Logistic Regression baseline on the CROMA joint embeddings (per-pixel).
 
 Same purpose and SAME data as rand_forest.py: it reuses the exact split 
 and the exact FID draws of the learning curve, so the Logistic
-Regression and the Random Forest are point-by-point comparable.
+Regression and the Random Forest are comparable.
 
 Regression is scale-sensitive, so features are standardized first.
 tune C with cross-validation using the training data (LogisticRegressionCV)
@@ -29,7 +29,7 @@ def make_lr():
             cv=5,                        # 5-fold CV inside the training tokens
             scoring="f1_macro",          # optimize macro-F1
             class_weight="balanced",    # unbalanced classes (lots of background)
-            max_iter=2000,              # give lbfgs (optimizator) room to converge on 768 features
+            max_iter=2000,              #768 features make the optimization harder, so lbfgs (default) needs more steps to converge
             random_state=0,
             n_jobs=n_jobs,
         ),
