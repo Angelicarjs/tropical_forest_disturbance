@@ -14,11 +14,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score, f1_score
 from collections import defaultdict
 import numpy as np
+import pandas as pd
 from seg_dataset import DisturbanceSegDataset, CLASS_TO_ID, NUM_CLASSES
 import matplotlib.pyplot as plt
 
 ID_TO_CLASS = {v: k for k, v in CLASS_TO_ID.items()}
-ID_TO_CLASS[0] = "background"
+ID_TO_CLASS[0] = "forest"
+
+# dedicated stable-forest embeddings (class 0), one CSV per fid/window/date/tile
+FOREST_ROOT = "embeddings/joint_forest"
 
 
 def integrity(emb_root="embeddings", n=300):
@@ -128,6 +132,34 @@ def build_pixel_dataset(ds):
     return np.concatenate(X, 0), np.concatenate(y, 0), np.concatenate(fids, 0)
 
 
+def build_pixel_dataset_forest(ds, forest_root, windows=("evt", "aft")):
+    """Like build_pixel_dataset, but class 0 is REAL forest (from CSV files), not background.
+
+    Disturbance classes (1..6) still come from the label polygons; the noisy
+    background (pixels outside any polygon) is dropped and replaced by the
+    dedicated PRODES-filtered forest embeddings. Each forest CSV holds one pixel
+    per row and 768 columns (lyr.1..lyr.768). Only `windows` are read.
+    """
+    X, y, fids = build_pixel_dataset(ds)
+    keep = y > 0                                          # drop old background (label 0)
+    Xd, yd, fd = X[keep], y[keep], fids[keep].astype(str)
+
+    Xf, ff = [], []
+    for csv in glob.glob(str(Path(forest_root) / "fid_*" / "*" / "*" / "tile_*.csv")):
+        p = Path(csv)
+        if p.parent.parent.name not in windows:          # <fid>/<window>/<date>/tile.csv
+            continue
+        arr = pd.read_csv(csv).to_numpy(dtype=Xd.dtype)   # (n_px, 768)
+        if arr.size:
+            Xf.append(arr)
+            ff.append(np.full(len(arr), p.parent.parent.parent.name.replace("fid_", "")))
+    Xf = np.concatenate(Xf, 0)
+    ff = np.concatenate(ff).astype(str)
+    yf = np.zeros(len(Xf), dtype=yd.dtype)                # forest = class 0
+    print(f"[forest] dropped background, added {len(Xf)} forest px ({'+'.join(windows)})")
+    return np.concatenate([Xd, Xf]), np.concatenate([yd, yf]), np.concatenate([fd, ff])
+
+
 def balance_classes(y, train_mask, per_class=2500, seed=0):
     """Class-balance the TRAINING tokens.
 
@@ -154,14 +186,15 @@ def make_rf():
     return RandomForestClassifier(n_estimators=1000, class_weight="balanced", random_state=0, n_jobs=n_jobs)
 
 
-def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomForest"):
+def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomForest",
+           forest_root=FOREST_ROOT):
     ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
-    X, y, fids = build_pixel_dataset(ds)
+    X, y, fids = build_pixel_dataset_forest(ds, forest_root)
     print(f"\n[B] {model_name} | {len(X)} pixels | {len(set(fids.tolist()))} FIDs | "
           f"classes={sorted(set(y.tolist()))}")
 
     # fid -> class (the FID's disturbance class, used only to stratify the split)
-    fid_cls = {f: ds.fid_polys[f][0][1] for f in set(fids.tolist())}
+    fid_cls = {f: ds.fid_polys[f][0][1] for f in set(fids.tolist()) if f in ds.fid_polys}
 
     # fixed, stratified split: 50% test / 50% train+val (at FID level, saved to txt)
     test_fids, trainval_fids = load_or_make_split(fid_cls)
@@ -179,26 +212,31 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
 
     # balance training tokens: <= 2500 per class (random); classes with fewer keep all
     tr_bal = balance_classes(y, tr, per_class=2500)
+    # balance test tokens the same way: <= 2500 per class, drawn ONLY from the test FIDs.
+    # balance_classes only touches tokens inside the given mask, so the FID split is respected.
+    te_bal = balance_classes(y, te, per_class=2500, seed=1)
 
-    # per-class counts: train+val before, train+val after, test
-    n_before = [int((y[tr] == c).sum()) for c in labels]
-    n_after  = [int((y[tr_bal] == c).sum()) for c in labels]
-    n_te     = [int((y[te] == c).sum()) for c in labels]
+    # per-class counts: train+val (before/after) and test (before/after)
+    n_tr_before = [int((y[tr] == c).sum()) for c in labels]
+    n_tr_after  = [int((y[tr_bal] == c).sum()) for c in labels]
+    n_te_before = [int((y[te] == c).sum()) for c in labels]
+    n_te_after  = [int((y[te_bal] == c).sum()) for c in labels]
 
     # table
-    print(f"\n{'class':<14} {'before':>9} {'after':>9} {'test':>8}")
-    print("-" * 42)
-    for name, a, b, t in zip(names, n_before, n_after, n_te):
-        print(f"{name:<14} {a:>9} {b:>9} {t:>8}")
-    print("-" * 42)
-    print(f"{'TOTAL':<14} {int(tr.sum()):>9} {int(tr_bal.sum()):>9} {int(te.sum()):>8}")
+    print(f"\n{'class':<14} {'tr_before':>10} {'tr_after':>10} {'te_before':>10} {'te_after':>10}")
+    print("-" * 58)
+    for name, a, b, c, d in zip(names, n_tr_before, n_tr_after, n_te_before, n_te_after):
+        print(f"{name:<14} {a:>10} {b:>10} {c:>10} {d:>10}")
+    print("-" * 58)
+    print(f"{'TOTAL':<14} {int(tr.sum()):>10} {int(tr_bal.sum()):>10} "
+          f"{int(te.sum()):>10} {int(te_bal.sum()):>10}")
 
     # histogram: before vs after (+ test for reference)
     x = np.arange(len(labels)); w = 0.27
     fig, ax = plt.subplots(figsize=(11, 5))
-    b1 = ax.bar(x - w, n_before, w, label="train+val (before)", color="tab:blue")
-    b2 = ax.bar(x,     n_after,  w, label="train+val (after)",  color="tab:green")
-    b3 = ax.bar(x + w, n_te,     w, label="test",               color="tab:orange")
+    b1 = ax.bar(x - w, n_tr_before, w, label="train+val (before)", color="tab:blue")
+    b2 = ax.bar(x,     n_tr_after,  w, label="train+val (after)",  color="tab:green")
+    b3 = ax.bar(x + w, n_te_after,  w, label="test (after)",       color="tab:orange")
     ax.axhline(2500, color="red", ls="--", lw=1.5, label="2500 cap")
     for b in (b1, b2, b3):
         ax.bar_label(b, fontsize=7)
@@ -208,9 +246,10 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     plt.savefig("token_distribution.png", dpi=150, bbox_inches="tight")
     print("saved token_distribution.png")
 
-    # train on the balanced set
+    # train on the balanced set; evaluate on the balanced test set
     tr = tr_bal
-    print(f"\nafter balancing -> {int(tr.sum())} train tokens")
+    te = te_bal
+    print(f"\nafter balancing -> {int(tr.sum())} train tokens | {int(te.sum())} test tokens")
 
     clf = make_model()
     clf.fit(X[tr], y[tr])
@@ -225,7 +264,7 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
 
 
 def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
-                   make_model=make_rf, model_name="RandomForest"):
+                   make_model=make_rf, model_name="RandomForest", forest_root=FOREST_ROOT):
     """
     Learning curve: how test performance changes as the training set grows.
 
@@ -238,13 +277,15 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     with different models reuses the EXACT same FIDs -> the curves are comparable.
     """
     ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
-    X, y, fids = build_pixel_dataset(ds)
+    X, y, fids = build_pixel_dataset_forest(ds, forest_root)
     fids_str = fids.astype(str)
 
     # fid -> disturbance class; fixed test / train+val split (FID level)
-    fid_cls = {f: ds.fid_polys[f][0][1] for f in set(fids.tolist())}
+    fid_cls = {f: ds.fid_polys[f][0][1] for f in set(fids.tolist()) if f in ds.fid_polys}
     test_fids, trainval_fids = load_or_make_split(fid_cls)
     te = np.isin(fids_str, list(test_fids))
+    # same balanced test as signal(): <= 2500 tokens per class, drawn only from test FIDs
+    te = balance_classes(y, te, per_class=2500, seed=1)
 
     # train+val FIDs grouped per disturbance class
     cls_fids = defaultdict(list)
