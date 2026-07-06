@@ -261,7 +261,9 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     # print the chosen C if the model tuned it internally
     final = clf.steps[-1][1] if hasattr(clf, "steps") else clf
     if hasattr(final, "C_"):
-        print(f"selected C per class: {final.C_}")
+        cs = np.unique(final.C_)                      # multinomial -> single shared C
+        print(f"selected C: {cs[0]:g}" if len(cs) == 1
+              else f"selected C per class: {final.C_}")
 
 
 def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
@@ -308,11 +310,11 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
 
     print(f"\n[C] learning curve | {model_name} | max FIDs/class={max_n} | "
           f"N schedule={ns} | repeats={n_repeats}")
-    print(f"    {'N/class':>8} {'train_tok':>9} {'acc':>14} {'f1_dist':>14} {'f1_all':>14}")
+    print(f"    {'N/class':>8} {'train_tok':>9} {'acc':>14} {'f1_dist':>14} {'f1_all':>14} {'C_med':>9}")
 
     rows = []
     for n in ns:
-        accs, f1d, f1a, npx = [], [], [], []
+        accs, f1d, f1a, npx, cs = [], [], [], [], []
         for r in range(n_repeats):
             rng = random.Random(1000 + r)
             selected = []
@@ -323,6 +325,9 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
             tr = np.isin(fids_str, selected)
             clf = make_model()
             clf.fit(X[tr], y[tr])
+            m = clf.steps[-1][1] if hasattr(clf, "steps") else clf
+            if hasattr(m, "C_"):
+                cs.extend(np.asarray(m.C_).tolist())   # chosen C per class (LogisticRegressionCV)
             pred = clf.predict(X[te])
             accs.append(accuracy_score(y[te], pred))
             f1d.append(f1_score(y[te], pred, labels=dist_labels, average="macro", zero_division=0))
@@ -335,11 +340,13 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
             "f1_dist_mean": float(np.mean(f1d)), "f1_dist_std": float(np.std(f1d)),
             "f1_all_mean": float(np.mean(f1a)), "f1_all_std": float(np.std(f1a)),
         }
+        row["C_median"] = float(np.median(cs)) if cs else None
         rows.append(row)
+        c_str = f"{row['C_median']:.3g}" if cs else "-"
         print(f"    {n:>8} {row['train_tokens_mean']:>9.0f} "
               f"{row['acc_mean']:>7.3f}±{row['acc_std']:<5.3f} "
               f"{row['f1_dist_mean']:>7.3f}±{row['f1_dist_std']:<5.3f} "
-              f"{row['f1_all_mean']:>7.3f}±{row['f1_all_std']:<5.3f}")
+              f"{row['f1_all_mean']:>7.3f}±{row['f1_all_std']:<5.3f} {c_str:>9}")
 
 
 if __name__ == "__main__":
