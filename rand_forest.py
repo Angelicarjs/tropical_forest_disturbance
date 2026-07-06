@@ -275,7 +275,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     N FIDs per class (with all their tokens), with N growing on a log schedule
     (2, 4, 8, ... up to the largest per-class FID count). For each N we train a
     fresh model, evaluate on the fixed test set, and average over `n_repeats`
-    random FID draws to smooth the noise???. Results are printed only (nothing is
+    random FID draws to smooth the noise. Results are printed only (nothing is
     saved). The FID draws are seeded independently of the model, so calling this
     with different models reuses the EXACT same FIDs -> the curves are comparable.
     """
