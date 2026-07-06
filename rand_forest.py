@@ -231,17 +231,18 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     print(f"{'TOTAL':<14} {int(tr.sum()):>10} {int(tr_bal.sum()):>10} "
           f"{int(te.sum()):>10} {int(te_bal.sum()):>10}")
 
-    # histogram: before vs after (+ test for reference)
-    x = np.arange(len(labels)); w = 0.27
-    fig, ax = plt.subplots(figsize=(11, 5))
-    b1 = ax.bar(x - w, n_tr_before, w, label="train+val (before)", color="tab:blue")
-    b2 = ax.bar(x,     n_tr_after,  w, label="train+val (after)",  color="tab:green")
-    b3 = ax.bar(x + w, n_te_after,  w, label="test (after)",       color="tab:orange")
+    # histogram: full vs subsampled, for both train and test (4 bars per class)
+    x = np.arange(len(labels)); w = 0.2
+    fig, ax = plt.subplots(figsize=(12, 5))
+    b1 = ax.bar(x - 1.5 * w, n_tr_before, w, label="train",          color="tab:blue")
+    b2 = ax.bar(x - 0.5 * w, n_tr_after,  w, label="train subsampled", color="tab:green")
+    b3 = ax.bar(x + 0.5 * w, n_te_before, w, label="test",           color="tab:orange")
+    b4 = ax.bar(x + 1.5 * w, n_te_after,  w, label="test subsampled",  color="tab:purple")
     ax.axhline(2500, color="red", ls="--", lw=1.5, label="2500 cap")
-    for b in (b1, b2, b3):
-        ax.bar_label(b, fontsize=7)
+    for b in (b1, b2, b3, b4):
+        ax.bar_label(b, fontsize=6)
     ax.set_xticks(x); ax.set_xticklabels(names, rotation=45, ha="right")
-    ax.set_ylabel("tokens"); ax.set_title("Token distribution per class — before vs after balancing")
+    ax.set_ylabel("tokens"); ax.set_title("Token distribution per class — full (antes) vs subsampled (despues)")
     ax.legend(); plt.tight_layout()
     plt.savefig("token_distribution.png", dpi=150, bbox_inches="tight")
     print("saved token_distribution.png")
