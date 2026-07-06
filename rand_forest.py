@@ -1,5 +1,5 @@
 """
-Random forest at a pixel level
+Random forest at a token level
 
 A) Integrity — shape, NaN/Inf, all-zero.
 B) Random forest training and evaluation on a fixed 50% test / 50% train+val split (at FID level, stratified by class).
@@ -114,7 +114,7 @@ def majority_downsample(mask, out_h, out_w, n_classes):
 
 def build_pixel_dataset(ds):
     """
-    PER-PIXEL: each embedding cell (15x15 grid) is one sample with 768 features.
+    PER-TOKEN: each embedding cell (15x15 grid) is one sample with 768 features.
     Its label comes from the per-pixel polygon mask (120x120) downsampled to the
     embedding grid by majority vote. Labels include background (0) + classes 1..6.
     Returns X (n_px, 768), y (n_px,), fids (n_px,) as numpy arrays.
@@ -136,8 +136,8 @@ def build_pixel_dataset_forest(ds, forest_root, windows=("evt", "aft")):
     """Like build_pixel_dataset, but class 0 is REAL forest (from CSV files), not background.
 
     Disturbance classes (1..6) still come from the label polygons; the noisy
-    background (pixels outside any polygon) is dropped and replaced by the
-    dedicated PRODES-filtered forest embeddings. Each forest CSV holds one pixel
+    background (tokens outside any polygon) is dropped and replaced by the
+    dedicated PRODES-filtered forest embeddings. Each forest CSV holds one token
     per row and 768 columns (lyr.1..lyr.768). Only `windows` are read.
     """
     X, y, fids = build_pixel_dataset(ds)
@@ -190,7 +190,7 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
            forest_root=FOREST_ROOT):
     ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
     X, y, fids = build_pixel_dataset_forest(ds, forest_root)
-    print(f"\n[B] {model_name} | {len(X)} pixels | {len(set(fids.tolist()))} FIDs | "
+    print(f"\n[B] {model_name} | {len(X)} tokens | {len(set(fids.tolist()))} FIDs | "
           f"classes={sorted(set(y.tolist()))}")
 
     # fid -> class (the FID's disturbance class, used only to stratify the split)
@@ -204,7 +204,7 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
     te = np.isin(fids_str, list(test_fids))
     # train+val where in trainval_fids
     tr = np.isin(fids_str, list(trainval_fids))
-    print(f"train+val: {tr.sum()} pixels | test: {te.sum()} pixels")
+    print(f"train+val: {tr.sum()} tokens | test: {te.sum()} tokens")
 
     # classes / names — computed once
     labels = sorted(set(y.tolist()))
@@ -270,7 +270,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     Learning curve: how test performance changes as the training set grows.
 
     The TEST set stays fixed (the 50% test split). On the train+val side we take
-    N FIDs per class (with all their pixels), with N growing on a log schedule
+    N FIDs per class (with all their tokens), with N growing on a log schedule
     (2, 4, 8, ... up to the largest per-class FID count). For each N we train a
     fresh model, evaluate on the fixed test set, and average over `n_repeats`
     random FID draws to smooth the noise???. Results are printed only (nothing is
@@ -308,7 +308,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
 
     print(f"\n[C] learning curve | {model_name} | max FIDs/class={max_n} | "
           f"N schedule={ns} | repeats={n_repeats}")
-    print(f"    {'N/class':>8} {'train_px':>9} {'acc':>14} {'f1_dist':>14} {'f1_all':>14}")
+    print(f"    {'N/class':>8} {'train_tok':>9} {'acc':>14} {'f1_dist':>14} {'f1_all':>14}")
 
     rows = []
     for n in ns:
@@ -316,8 +316,8 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
         for r in range(n_repeats):
             rng = random.Random(1000 + r)
             selected = []
-            for c, fl in cls_fids.items():
-                fl = sorted(fl)
+            for c in sorted(cls_fids):        # fixed class order -> reproducible across processes
+                fl = sorted(cls_fids[c])
                 rng.shuffle(fl)
                 selected.extend(fl[:min(n, len(fl))])
             tr = np.isin(fids_str, selected)
@@ -330,13 +330,13 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
             npx.append(int(tr.sum()))
         row = {
             "n_fids_per_class": n,
-            "train_pixels_mean": float(np.mean(npx)),
+            "train_tokens_mean": float(np.mean(npx)),
             "acc_mean": float(np.mean(accs)), "acc_std": float(np.std(accs)),
             "f1_dist_mean": float(np.mean(f1d)), "f1_dist_std": float(np.std(f1d)),
             "f1_all_mean": float(np.mean(f1a)), "f1_all_std": float(np.std(f1a)),
         }
         rows.append(row)
-        print(f"    {n:>8} {row['train_pixels_mean']:>9.0f} "
+        print(f"    {n:>8} {row['train_tokens_mean']:>9.0f} "
               f"{row['acc_mean']:>7.3f}±{row['acc_std']:<5.3f} "
               f"{row['f1_dist_mean']:>7.3f}±{row['f1_dist_std']:<5.3f} "
               f"{row['f1_all_mean']:>7.3f}±{row['f1_all_std']:<5.3f}")
