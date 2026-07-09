@@ -212,9 +212,8 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
 
     # balance training tokens: <= 2500 per class (random); classes with fewer keep all
     tr_bal = balance_classes(y, tr, per_class=2500)
-    # balance test tokens the same way: <= 2500 per class, drawn ONLY from the test FIDs.
-    # balance_classes only touches tokens inside the given mask, so the FID split is respected.
-    te_bal = balance_classes(y, te, per_class=2500, seed=1)
+    # test is NOT subsampled: evaluate on the full (real) test distribution
+    te_bal = te
 
     # per-class counts: train+val (before/after) and test (before/after)
     n_tr_before = [int((y[tr] == c).sum()) for c in labels]
@@ -267,7 +266,8 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
 
 
 def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
-                   make_model=make_rf, model_name="RandomForest", forest_root=FOREST_ROOT):
+                   make_model=make_rf, model_name="RandomForest", forest_root=FOREST_ROOT,
+                   data=None):
     """
     Learning curve: how test performance changes as the training set grows.
 
@@ -279,16 +279,19 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     saved). The FID draws are seeded independently of the model, so calling this
     with different models reuses the EXACT same FIDs -> the curves are comparable.
     """
-    ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
-    X, y, fids = build_pixel_dataset_forest(ds, forest_root)
+    # reuse preloaded data if given (avoids reading all embeddings twice), else load
+    if data is None:
+        ds = DisturbanceSegDataset(emb_root, tiles_root, shp)
+        X, y, fids = build_pixel_dataset_forest(ds, forest_root)
+    else:
+        ds, X, y, fids = data
     fids_str = fids.astype(str)
 
     # fid -> disturbance class; fixed test / train+val split (FID level)
     fid_cls = {f: ds.fid_polys[f][0][1] for f in set(fids.tolist()) if f in ds.fid_polys}
     test_fids, trainval_fids = load_or_make_split(fid_cls)
     te = np.isin(fids_str, list(test_fids))
-    # same balanced test as signal(): <= 2500 tokens per class, drawn only from test FIDs
-    te = balance_classes(y, te, per_class=2500, seed=1)
+    # test is NOT subsampled: evaluate on the full (real) test distribution
 
     # train+val FIDs grouped per disturbance class
     cls_fids = defaultdict(list)
@@ -347,6 +350,8 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
               f"{row['acc_mean']:>7.3f}±{row['acc_std']:<5.3f} "
               f"{row['f1_dist_mean']:>7.3f}±{row['f1_dist_std']:<5.3f} "
               f"{row['f1_all_mean']:>7.3f}±{row['f1_all_std']:<5.3f} {c_str:>9}")
+
+    return rows
 
 
 if __name__ == "__main__":

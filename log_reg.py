@@ -1,5 +1,5 @@
 """
-Logistic Regression baseline on the CROMA joint embeddings (per-pixel).
+Logistic Regression baseline on the CROMA joint embeddings (per-token).
 
 Same purpose and SAME data as rand_forest.py: it reuses the exact split 
 and the exact FID draws of the learning curve, so the Logistic

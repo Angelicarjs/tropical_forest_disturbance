@@ -1,20 +1,23 @@
 #!/bin/bash
-#SBATCH --job-name=log_reg
+#SBATCH --job-name=eval
 #SBATCH --partition=shortrun
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=16G
 #SBATCH --time=12:00:00
-#SBATCH --output=slurm_log_reg_%j.log
+#SBATCH --output=results/eval_%j.log
 
 source /share/common/anaconda/etc/profile.d/conda.sh
 conda activate croma_viz
 
 cd /share/castor/home/e2406749/tropical_forest_disturbance
 
+mkdir -p results   # so slurm can write results/eval_%j.log
+
 export PYTHONUNBUFFERED=1
-export MPLBACKEND=Agg
-export OMP_NUM_THREADS=1   # due to n_jobs parallelism in LogisticRegressionCV
-export PYTHONWARNINGS="ignore::FutureWarning"  # silence sklearn 1.10 deprecation warnings (incl. worker processes)
+export MPLBACKEND=Agg   # matplotlib without GUI
+export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF / LogisticRegressionCV
+export PYTHONWARNINGS="ignore::FutureWarning"
+
 echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | Start: $(date)"
-python log_reg.py
+python run_eval.py
 echo "End: $(date)"
