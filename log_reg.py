@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegressionCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
-from rand_forest import signal, learning_curve
+from rand_forest import signal, training_size_sensitivity
 
 #tunning C
 def make_lr():
@@ -41,7 +41,7 @@ if __name__ == "__main__":
            os.path.expanduser("~/thesis_tiles_120px"),
            "data_shp/label_polygons.shp",
            make_model=make_lr, model_name="LogisticRegression")
-    learning_curve("embeddings",
+    training_size_sensitivity("embeddings",
                    os.path.expanduser("~/thesis_tiles_120px"),
                    "data_shp/label_polygons.shp",
                    make_model=make_lr, model_name="LogisticRegression")
