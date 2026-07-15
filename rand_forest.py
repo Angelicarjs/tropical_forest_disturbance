@@ -314,11 +314,11 @@ def training_size_sensitivity(emb_root, tiles_root, shp, n_repeats=3,
     print(f"\n[C] training-size sensitivity | {model_name} | max FIDs/class={max_n} | "
           f"N schedule={ns} | repeats={n_repeats}")
     print(f"    {'N/class':>8} {'train_tok':>9} {'acc':>14} {'prec_dist':>14} "
-          f"{'f1_dist':>14} {'f1_all':>14} {'C_med':>9}")
+          f"{'prec_dist_w':>14} {'f1_dist':>14} {'f1_all':>14} {'C_med':>9}")
 
     rows = []
     for n in ns:
-        accs, precd, f1d, f1a, npx, cs = [], [], [], [], [], []
+        accs, precd, precw, f1d, f1a, npx, cs = [], [], [], [], [], [], []
         for r in range(n_repeats):
             rng = random.Random(1000 + r)
             selected = []
@@ -335,6 +335,7 @@ def training_size_sensitivity(emb_root, tiles_root, shp, n_repeats=3,
             pred = clf.predict(X[te])
             accs.append(accuracy_score(y[te], pred))
             precd.append(precision_score(y[te], pred, labels=dist_labels, average="macro", zero_division=0))
+            precw.append(precision_score(y[te], pred, labels=dist_labels, average="weighted", zero_division=0))
             f1d.append(f1_score(y[te], pred, labels=dist_labels, average="macro", zero_division=0))
             f1a.append(f1_score(y[te], pred, labels=all_labels, average="macro", zero_division=0))
             npx.append(int(tr.sum()))
@@ -343,6 +344,7 @@ def training_size_sensitivity(emb_root, tiles_root, shp, n_repeats=3,
             "train_tokens_mean": float(np.mean(npx)),
             "acc_mean": float(np.mean(accs)), "acc_std": float(np.std(accs)),
             "prec_dist_mean": float(np.mean(precd)), "prec_dist_std": float(np.std(precd)),
+            "prec_dist_w_mean": float(np.mean(precw)), "prec_dist_w_std": float(np.std(precw)),
             "f1_dist_mean": float(np.mean(f1d)), "f1_dist_std": float(np.std(f1d)),
             "f1_all_mean": float(np.mean(f1a)), "f1_all_std": float(np.std(f1a)),
         }
@@ -352,6 +354,7 @@ def training_size_sensitivity(emb_root, tiles_root, shp, n_repeats=3,
         print(f"    {n:>8} {row['train_tokens_mean']:>9.0f} "
               f"{row['acc_mean']:>7.3f}±{row['acc_std']:<5.3f} "
               f"{row['prec_dist_mean']:>7.3f}±{row['prec_dist_std']:<5.3f} "
+              f"{row['prec_dist_w_mean']:>7.3f}±{row['prec_dist_w_std']:<5.3f} "
               f"{row['f1_dist_mean']:>7.3f}±{row['f1_dist_std']:<5.3f} "
               f"{row['f1_all_mean']:>7.3f}±{row['f1_all_std']:<5.3f} {c_str:>9}")
 

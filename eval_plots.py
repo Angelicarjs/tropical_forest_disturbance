@@ -157,6 +157,7 @@ def plot_training_size_sensitivity(rows, model_name, out=None, show=False):
     fig, ax = plt.subplots(figsize=(9, 6))
     for key, lbl in [("acc", "accuracy"),
                      ("prec_dist", "macro-precision (disturbance 1-6)"),
+                     ("prec_dist_w", "weighted-precision (disturbance 1-6)"),
                      ("f1_dist", "macro-F1 (disturbance 1-6)"),
                      ("f1_all", "macro-F1 (all)")]:
         m = [r[f"{key}_mean"] for r in rows]
