@@ -6,6 +6,7 @@ Used both by run_eval.py (saves PNGs, backend Agg) and by eval_results.ipynb
 (display inline); the script passes out=..., the notebook passes show=True.
 """
 import numpy as np
+import rasterio
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
@@ -92,8 +93,26 @@ def plot_prf(y_true, y_pred, model_name, out=None, show=False):
     _finish(fig, out, show)
 
 
+def _load_rgb(ds, s, bands=(4, 3, 2), p_lo=2, p_hi=98):
+    """True-color RGB (B4/B3/B2) for a tile, percentile-stretched to [0, 1].
+
+    Band order in the s2_l2a tiles is the CROMA order
+    [B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B11, B12] (1-based), so
+    R=B4 (band 4), G=B3 (band 3), B=B2 (band 2). Returns None if the tif
+    is missing (e.g. embeddings present but tiles not synced).
+    """
+    tif = (ds.tiles_root / "s2_l2a" / f"fid_{s['fid']}"
+           / s["window"] / s["s2_id"] / f"{s['tile']}.tif")
+    if not tif.exists():
+        return None
+    with rasterio.open(tif) as src:
+        rgb = np.stack([src.read(b).astype(np.float32) for b in bands], axis=-1)  # (H,W,3)
+    lo, hi = np.percentile(rgb, [p_lo, p_hi])
+    return np.clip((rgb - lo) / (hi - lo + 1e-6), 0, 1)
+
+
 def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False, max_tiles_per_fid=4):
-    """For each FID: ground-truth vs predicted class grid, one row per tile.
+    """For each FID: RGB image vs ground-truth vs predicted class grid, one row per tile.
 
     Ground truth uses a dedicated 'background (unlabeled)' color for everything
     outside the disturbance polygon, kept distinct from the model's 'forest' class.
@@ -106,17 +125,24 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False, max_tiles_per
         print("[maps] no samples for the requested FIDs")
         return
     n = len(rows)
-    fig, axes = plt.subplots(n, 2, figsize=(5.5, 2.7 * n), squeeze=False)
+    fig, axes = plt.subplots(n, 3, figsize=(8.2, 2.7 * n), squeeze=False)
     for k, (fid, s) in enumerate(rows):
         emb = np.load(s["npy"])                          # (gh, gw, 768)
         gh, gw, _ = emb.shape
         pred = clf.predict(emb.reshape(-1, 768)).reshape(gh, gw)   # 0=forest .. 6
         gt = majority_downsample(ds._build_mask(s), gh, gw, NUM_CLASSES)
         gt_disp = np.where(gt == 0, MAP_BG_ID, gt)       # bg (outside polygon) -> grey
-        axes[k][0].imshow(gt_disp, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
-        axes[k][0].set_title(f"fid {fid} - {s['window']} - ground truth", fontsize=8)
-        axes[k][1].imshow(pred, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
-        axes[k][1].set_title(f"fid {fid} - {s['window']} - {model_name}", fontsize=8)
+
+        rgb = _load_rgb(ds, s)                           # (H, W, 3) or None
+        if rgb is not None:
+            axes[k][0].imshow(rgb, interpolation="nearest")
+        else:
+            axes[k][0].text(0.5, 0.5, "no RGB", ha="center", va="center", fontsize=8)
+        axes[k][0].set_title(f"fid {fid} - {s['window']} - RGB (B4/B3/B2)", fontsize=8)
+        axes[k][1].imshow(gt_disp, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
+        axes[k][1].set_title("ground truth", fontsize=8)
+        axes[k][2].imshow(pred, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
+        axes[k][2].set_title(model_name, fontsize=8)
         for ax in axes[k]:
             ax.set_xticks([]); ax.set_yticks([])
     handles = [plt.Rectangle((0, 0), 1, 1, color=MAP_COLORS[c]) for c in range(len(MAP_NAMES))]
@@ -125,11 +151,12 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False, max_tiles_per
     _finish(fig, out, show)
 
 
-def plot_learning_curve(rows, model_name, out=None, show=False):
-    """Plot the learning-curve rows returned by rand_forest.learning_curve()."""
+def plot_training_size_sensitivity(rows, model_name, out=None, show=False):
+    """Plot the rows returned by rand_forest.training_size_sensitivity()."""
     x = [r["train_tokens_mean"] for r in rows]
     fig, ax = plt.subplots(figsize=(9, 6))
     for key, lbl in [("acc", "accuracy"),
+                     ("prec_dist", "macro-precision (disturbance 1-6)"),
                      ("f1_dist", "macro-F1 (disturbance 1-6)"),
                      ("f1_all", "macro-F1 (all)")]:
         m = [r[f"{key}_mean"] for r in rows]
@@ -137,7 +164,7 @@ def plot_learning_curve(rows, model_name, out=None, show=False):
         ax.errorbar(x, m, yerr=s, marker="o", capsize=3, label=lbl)
     ax.set_xscale("log")
     ax.set_xlabel("train tokens (mean)"); ax.set_ylabel("score"); ax.set_ylim(0, 1.02)
-    ax.set_title(f"{model_name} - learning curve")
+    ax.set_title(f"{model_name} - sensitivity to training-set size")
     ax.legend(); ax.grid(alpha=0.3)
     fig.tight_layout()
     _finish(fig, out, show)

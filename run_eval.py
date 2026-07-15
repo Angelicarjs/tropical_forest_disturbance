@@ -5,7 +5,7 @@ Loads the embeddings ONCE, then for each model (Random Forest, Logistic
 Regression) it:
   - trains on the balanced train+val tokens (<=2500/class); test kept full
   - saves artifacts (model.joblib, pred.npy, y_test.npy, test_fids.npy)
-  - saves figures: confusion.png, prf.png, fidmaps.png, learning_curve.png
+  - saves figures: confusion.png, prf.png, fidmaps.png, training_size_sensitivity.png
 into results/rf/ and results/log_reg/. A shared results/token_distribution.png
 is written once. The notebook only reads these outputs.
 
@@ -15,10 +15,12 @@ import os
 import argparse
 import joblib
 import numpy as np
+from sklearn.metrics import accuracy_score, classification_report
 
 from seg_dataset import DisturbanceSegDataset
-from rand_forest import (FOREST_ROOT, load_or_make_split, build_pixel_dataset_forest,
-                         balance_classes, make_rf, learning_curve)
+from rand_forest import (FOREST_ROOT, ID_TO_CLASS, load_or_make_split,
+                         build_pixel_dataset_forest, balance_classes, make_rf,
+                         training_size_sensitivity)
 from log_reg import make_lr
 import eval_plots as ep
 
@@ -32,7 +34,8 @@ def main():
     ap.add_argument("--tiles-root", default=os.path.expanduser("~/thesis_tiles_120px"))
     ap.add_argument("--shp", default="data_shp/label_polygons.shp")
     ap.add_argument("--forest-root", default=FOREST_ROOT)
-    ap.add_argument("--n-repeats", type=int, default=3, help="learning-curve repeats")
+    ap.add_argument("--n-repeats", type=int, default=3,
+                    help="repeats for the training-size sensitivity analysis")
     ap.add_argument("--fids", nargs="*", default=None,
                     help="test FIDs to map (default: first 4 test FIDs)")
     ap.add_argument("--results-root", default="results")
@@ -68,6 +71,20 @@ def main():
         clf.fit(X[tr_bal], y[tr_bal])
         pred = clf.predict(X[te])
 
+        # printed report on the full test set (precision / recall / f1 / accuracy)
+        report_labels = sorted(set(y[te].tolist()))
+        report_names = [ID_TO_CLASS[c] for c in report_labels]
+        print(f"\n[{name}] accuracy (test): {accuracy_score(y[te], pred):.3f}")
+        print(classification_report(y[te], pred, labels=report_labels,
+                                    target_names=report_names, zero_division=0), flush=True)
+
+        # print the chosen C if the model tuned it internally (LogisticRegressionCV)
+        final = clf.steps[-1][1] if hasattr(clf, "steps") else clf
+        if hasattr(final, "C_"):
+            cs = np.unique(final.C_)
+            print(f"[{name}] selected C: {cs[0]:g}" if len(cs) == 1
+                  else f"[{name}] selected C per class: {final.C_}", flush=True)
+
         joblib.dump(clf, os.path.join(outdir, "model.joblib"))
         np.save(os.path.join(outdir, "pred.npy"), pred)
         np.save(os.path.join(outdir, "y_test.npy"), y[te])
@@ -77,11 +94,12 @@ def main():
         ep.plot_prf(y[te], pred, name, out=os.path.join(outdir, "prf.png"))
         ep.plot_fid_maps(ds, clf, map_fids, name, out=os.path.join(outdir, "fidmaps.png"))
 
-        print(f"[{name}] learning curve...", flush=True)
-        rows = learning_curve(args.embeddings_root, args.tiles_root, args.shp,
-                              n_repeats=args.n_repeats, make_model=make,
-                              model_name=name, data=(ds, X, y, fids))
-        ep.plot_learning_curve(rows, name, out=os.path.join(outdir, "learning_curve.png"))
+        print(f"[{name}] training-size sensitivity...", flush=True)
+        rows = training_size_sensitivity(args.embeddings_root, args.tiles_root, args.shp,
+                                         n_repeats=args.n_repeats, make_model=make,
+                                         model_name=name, data=(ds, X, y, fids))
+        ep.plot_training_size_sensitivity(
+            rows, name, out=os.path.join(outdir, "training_size_sensitivity.png"))
         print(f"[{name}] done -> {outdir}/", flush=True)
 
 

@@ -11,7 +11,7 @@ import glob
 import random
 from pathlib import Path
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score, f1_score
+from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -265,11 +265,11 @@ def signal(emb_root, tiles_root, shp, make_model=make_rf, model_name="RandomFore
               else f"selected C per class: {final.C_}")
 
 
-def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
-                   make_model=make_rf, model_name="RandomForest", forest_root=FOREST_ROOT,
-                   data=None):
+def training_size_sensitivity(emb_root, tiles_root, shp, n_repeats=3,
+                              make_model=make_rf, model_name="RandomForest",
+                              forest_root=FOREST_ROOT, data=None):
     """
-    Learning curve: how test performance changes as the training set grows.
+    Training-size sensitivity: how test performance changes as the training set grows.
 
     The TEST set stays fixed (the 50% test split). On the train+val side we take
     N FIDs per class (with all their tokens), with N growing on a log schedule
@@ -311,13 +311,14 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
     dist_labels = sorted(CLASS_TO_ID.values())        # 1..6 (disturbance only)
     all_labels = sorted(set(y[te].tolist()))          # incl. background, for context
 
-    print(f"\n[C] learning curve | {model_name} | max FIDs/class={max_n} | "
+    print(f"\n[C] training-size sensitivity | {model_name} | max FIDs/class={max_n} | "
           f"N schedule={ns} | repeats={n_repeats}")
-    print(f"    {'N/class':>8} {'train_tok':>9} {'acc':>14} {'f1_dist':>14} {'f1_all':>14} {'C_med':>9}")
+    print(f"    {'N/class':>8} {'train_tok':>9} {'acc':>14} {'prec_dist':>14} "
+          f"{'f1_dist':>14} {'f1_all':>14} {'C_med':>9}")
 
     rows = []
     for n in ns:
-        accs, f1d, f1a, npx, cs = [], [], [], [], []
+        accs, precd, f1d, f1a, npx, cs = [], [], [], [], [], []
         for r in range(n_repeats):
             rng = random.Random(1000 + r)
             selected = []
@@ -333,6 +334,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
                 cs.extend(np.asarray(m.C_).tolist())   # chosen C per class (LogisticRegressionCV)
             pred = clf.predict(X[te])
             accs.append(accuracy_score(y[te], pred))
+            precd.append(precision_score(y[te], pred, labels=dist_labels, average="macro", zero_division=0))
             f1d.append(f1_score(y[te], pred, labels=dist_labels, average="macro", zero_division=0))
             f1a.append(f1_score(y[te], pred, labels=all_labels, average="macro", zero_division=0))
             npx.append(int(tr.sum()))
@@ -340,6 +342,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
             "n_fids_per_class": n,
             "train_tokens_mean": float(np.mean(npx)),
             "acc_mean": float(np.mean(accs)), "acc_std": float(np.std(accs)),
+            "prec_dist_mean": float(np.mean(precd)), "prec_dist_std": float(np.std(precd)),
             "f1_dist_mean": float(np.mean(f1d)), "f1_dist_std": float(np.std(f1d)),
             "f1_all_mean": float(np.mean(f1a)), "f1_all_std": float(np.std(f1a)),
         }
@@ -348,6 +351,7 @@ def learning_curve(emb_root, tiles_root, shp, n_repeats=3,
         c_str = f"{row['C_median']:.3g}" if cs else "-"
         print(f"    {n:>8} {row['train_tokens_mean']:>9.0f} "
               f"{row['acc_mean']:>7.3f}±{row['acc_std']:<5.3f} "
+              f"{row['prec_dist_mean']:>7.3f}±{row['prec_dist_std']:<5.3f} "
               f"{row['f1_dist_mean']:>7.3f}±{row['f1_dist_std']:<5.3f} "
               f"{row['f1_all_mean']:>7.3f}±{row['f1_all_std']:<5.3f} {c_str:>9}")
 
@@ -359,6 +363,6 @@ if __name__ == "__main__":
     signal("embeddings",
            os.path.expanduser("~/thesis_tiles_120px"),
            "data_shp/label_polygons.shp")
-    learning_curve("embeddings",
-                   os.path.expanduser("~/thesis_tiles_120px"),
-                   "data_shp/label_polygons.shp")
+    training_size_sensitivity("embeddings",
+                              os.path.expanduser("~/thesis_tiles_120px"),
+                              "data_shp/label_polygons.shp")
