@@ -166,6 +166,8 @@ def plot_learning_curve_binary(rows, model_name, out):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--embeddings-root", default="embeddings")
+    ap.add_argument("--embed-kind", default="joint",
+                    help="embedding modality subdir: joint | s2_l2a | s1_grd")
     ap.add_argument("--tiles-root", default=os.path.expanduser("~/thesis_tiles_120px"))
     ap.add_argument("--shp", default="data_shp/label_polygons.shp")
     ap.add_argument("--forest-root", default=FOREST_ROOT)
@@ -179,7 +181,8 @@ def main():
     os.makedirs(args.results_root, exist_ok=True)
 
     # ---- load everything once (heavy) ----
-    ds = DisturbanceSegDataset(args.embeddings_root, args.tiles_root, args.shp)
+    ds = DisturbanceSegDataset(args.embeddings_root, args.tiles_root, args.shp,
+                               embed_kind=args.embed_kind)
     X, y, fids = build_pixel_dataset_forest(ds, args.forest_root)
 
     # ---- keep ONLY forest (0) and clear-cut bare soil (1) ----

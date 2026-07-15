@@ -35,11 +35,14 @@ NUM_CLASSES = len(CLASS_TO_ID) + 1  # +1 for background
 
 class DisturbanceSegDataset(Dataset):
     def __init__(self, embeddings_root, tiles_root, shp_path,
-                 windows=("evt", "aft")):
+                 windows=("evt", "aft"), embed_kind="joint"):
         """
-        embeddings_root: .../embeddings  (contains joint/)
+        embeddings_root: .../embeddings  (contains joint/, s2_l2a/, s1_grd/)
         tiles_root:      .../thesis_tiles_120px  (contains s2_l2a/)
         shp_path:        .../label_polygons.shp
+        embed_kind:      which modality subdir to read tokens from
+                         ("joint" | "s2_l2a" | "s1_grd"). Same fid/window/tile
+                         layout across modalities, so tokens are 1:1 comparable.
         """
         self.tiles_root = Path(tiles_root)
         self.windows = set(windows)
@@ -57,10 +60,10 @@ class DisturbanceSegDataset(Dataset):
             self.fid_polys.setdefault(row["fid"], []).append((row.geometry, cid))
 
         # --- Index every embedding tile in the requested windows ---
-        # path: embeddings/joint/fid_<fid>/<window>/<s2id__s1id>/tile_N.npy
+        # path: embeddings/<embed_kind>/fid_<fid>/<window>/<s2id__s1id>/tile_N.npy
         self.samples = []
-        #for every .npy file in the joint embeddings
-        for npy in glob.glob(str(Path(embeddings_root) / "joint" / "fid_*" / "*" / "*" / "tile_*.npy")):
+        #for every .npy file in the selected modality's embeddings
+        for npy in glob.glob(str(Path(embeddings_root) / embed_kind / "fid_*" / "*" / "*" / "tile_*.npy")):
             p = Path(npy)
             #take the window and the fid from the path, check if they are in the requested windows and in the shapefile, if not skip
             pair = p.parent.name          # "<s2id>__<s1id>"
