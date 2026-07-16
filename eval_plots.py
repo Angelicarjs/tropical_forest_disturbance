@@ -5,6 +5,7 @@ Used both by run_eval.py (saves PNGs, backend Agg) and by eval_results.ipynb
 (renders inline). Functions take an optional `out` path (save) and `show` flag
 (display inline); the script passes out=..., the notebook passes show=True.
 """
+import re
 import numpy as np
 import rasterio
 import matplotlib.pyplot as plt
@@ -111,11 +112,32 @@ def _load_rgb(ds, s, bands=(4, 3, 2), p_lo=2, p_hi=98):
     return np.clip((rgb - lo) / (hi - lo + 1e-6), 0, 1)
 
 
-def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False, max_tiles_per_fid=4):
+def _fmt_date(s2_id):
+    """Extract YYYYMMDD from a scene id like '20230515T142711_...' -> '2023-05-15'."""
+    m = re.search(r"(\d{4})(\d{2})(\d{2})", s2_id)
+    return f"{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else s2_id
+
+
+def _outline_polygon(ax, fine, gh, gw):
+    """Draw the true polygon boundary (from the fine 120x120 mask) on top of a
+    gh x gw token-grid axis, aligned with imshow cell centers."""
+    if not (fine > 0).any():
+        return
+    H, W = fine.shape
+    Xg = np.linspace(-0.5, gw - 0.5, W)          # map the 120 px onto the token axis
+    Yg = np.linspace(-0.5, gh - 0.5, H)
+    ax.contour(Xg, Yg, (fine > 0).astype(float), levels=[0.5],
+               colors="red", linewidths=1.0)
+
+
+def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
+                  max_tiles_per_fid=4, outline_polygons=True):
     """For each FID: RGB image vs ground-truth vs predicted class grid, one row per tile.
 
     Ground truth uses a dedicated 'background (unlabeled)' color for everything
     outside the disturbance polygon, kept distinct from the model's 'forest' class.
+    When outline_polygons is True, the true polygon boundary is drawn (red) on top
+    of the ground-truth and predicted panels.
     """
     rows = []
     for fid in fids:
@@ -130,7 +152,8 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False, max_tiles_per
         emb = np.load(s["npy"])                          # (gh, gw, 768)
         gh, gw, _ = emb.shape
         pred = clf.predict(emb.reshape(-1, 768)).reshape(gh, gw)   # 0=forest .. 6
-        gt = majority_downsample(ds._build_mask(s), gh, gw, NUM_CLASSES)
+        fine = ds._build_mask(s)                         # 120x120 rasterized polygons
+        gt = majority_downsample(fine, gh, gw, NUM_CLASSES)
         gt_disp = np.where(gt == 0, MAP_BG_ID, gt)       # bg (outside polygon) -> grey
 
         rgb = _load_rgb(ds, s)                           # (H, W, 3) or None
@@ -138,10 +161,16 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False, max_tiles_per
             axes[k][0].imshow(rgb, interpolation="nearest")
         else:
             axes[k][0].text(0.5, 0.5, "no RGB", ha="center", va="center", fontsize=8)
-        axes[k][0].set_title(f"fid {fid} - {s['window']} - RGB (B4/B3/B2)", fontsize=8)
+        dist = "/".join(sorted({ID_TO_CLASS[c] for _, c in ds.fid_polys.get(fid, [])})) or "?"
+        axes[k][0].set_title(
+            f"fid {fid} · {s['tile']} · {_fmt_date(s['s2_id'])} · {s['window']}\n{dist}",
+            fontsize=7)
         axes[k][1].imshow(gt_disp, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
-        axes[k][1].set_title("ground truth", fontsize=8)
         axes[k][2].imshow(pred, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
+        if outline_polygons:
+            _outline_polygon(axes[k][1], fine, gh, gw)
+            _outline_polygon(axes[k][2], fine, gh, gw)
+        axes[k][1].set_title("ground truth", fontsize=8)
         axes[k][2].set_title(model_name, fontsize=8)
         for ax in axes[k]:
             ax.set_xticks([]); ax.set_yticks([])
