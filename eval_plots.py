@@ -118,14 +118,15 @@ def _fmt_date(s2_id):
     return f"{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else s2_id
 
 
-def _outline_polygon(ax, fine, gh, gw):
-    """Draw the true polygon boundary (from the fine 120x120 mask) on top of a
-    gh x gw token-grid axis, aligned with imshow cell centers."""
+def _outline_polygon(ax, fine, out_h, out_w):
+    """Draw the true polygon boundary (from the fine mask) on top of an axis that
+    displays an out_h x out_w image of the SAME tile extent (token grid or full-res
+    RGB), aligned with imshow cell centers."""
     if not (fine > 0).any():
         return
     H, W = fine.shape
-    Xg = np.linspace(-0.5, gw - 0.5, W)          # map the 120 px onto the token axis
-    Yg = np.linspace(-0.5, gh - 0.5, H)
+    Xg = (np.arange(W) + 0.5) * out_w / W - 0.5   # fine-pixel centers -> target axis
+    Yg = (np.arange(H) + 0.5) * out_h / H - 0.5
     ax.contour(Xg, Yg, (fine > 0).astype(float), levels=[0.5],
                colors="red", linewidths=1.0)
 
@@ -168,6 +169,8 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
         axes[k][1].imshow(gt_disp, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
         axes[k][2].imshow(pred, cmap=MAP_CMAP, norm=MAP_NORM, interpolation="nearest")
         if outline_polygons:
+            if rgb is not None:
+                _outline_polygon(axes[k][0], fine, rgb.shape[0], rgb.shape[1])
             _outline_polygon(axes[k][1], fine, gh, gw)
             _outline_polygon(axes[k][2], fine, gh, gw)
         axes[k][1].set_title("ground truth", fontsize=8)
