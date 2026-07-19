@@ -145,7 +145,11 @@ def build_pixel_dataset_forest(ds, forest_root, windows=("evt", "aft")):
     Xd, yd, fd = X[keep], y[keep], fids[keep].astype(str)
 
     Xf, ff = [], []
-    for csv in glob.glob(str(Path(forest_root) / "fid_*" / "*" / "*" / "tile_*.csv")):
+    # new layout emits tile_N_samples.csv (768-dim tokens) + tile_N_locs.csv (cell,x,y);
+    # old layout emits tile_N.csv. Accept both, but skip the *_locs.csv coordinate files.
+    forest_csvs = glob.glob(str(Path(forest_root) / "fid_*" / "*" / "*" / "tile_*.csv"))
+    forest_csvs = [c for c in forest_csvs if not c.endswith("_locs.csv")]
+    for csv in forest_csvs:
         p = Path(csv)
         if p.parent.parent.name not in windows:          # <fid>/<window>/<date>/tile.csv
             continue
