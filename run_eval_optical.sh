@@ -22,5 +22,6 @@ echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | Start: $(date)"
 python run_eval.py \
     --embed-kind s2_l2a \
     --forest-root embeddings/s2_l2a_forest \
-    --results-root results_optical
+    --results-root results_optical \
+    --fids 83 389 25 3
 echo "End: $(date)"
