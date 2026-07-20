@@ -95,7 +95,8 @@ def main():
 
         ep.plot_confusion(y[te], pred, name, out=os.path.join(outdir, "confusion.png"))
         ep.plot_prf(y[te], pred, name, out=os.path.join(outdir, "prf.png"))
-        ep.plot_fid_maps(ds, clf, map_fids, name, out=os.path.join(outdir, "fidmaps.png"))
+        ep.plot_fid_maps(ds, clf, map_fids, name, out=os.path.join(outdir, "fidmaps.png"),
+                         forest_root=args.forest_root)
 
         print(f"[{name}] training-size sensitivity...", flush=True)
         rows = training_size_sensitivity(args.embeddings_root, args.tiles_root, args.shp,

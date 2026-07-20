@@ -6,7 +6,11 @@ Used both by run_eval.py (saves PNGs, backend Agg) and by eval_results.ipynb
 (display inline); the script passes out=..., the notebook passes show=True.
 """
 import re
+import glob
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
 import rasterio
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -131,14 +135,35 @@ def _outline_polygon(ax, fine, out_h, out_w):
                colors="red", linewidths=1.0)
 
 
+def _forest_cells(forest_root, fid, tile, windows, grid=15):
+    """Boolean (grid, grid) mask of cells sampled as forest (class 0) tokens.
+
+    Cells come from tile_N_locs.csv ('cell' = 1-based row-major index over the
+    grid x grid token grid), aggregated across the given windows/dates. Uses the
+    same forest_root as the classifier, so joint and optical runs each show the
+    cells actually used by that modality.
+    """
+    mask = np.zeros((grid, grid), bool)
+    for lc in glob.glob(str(Path(forest_root) / f"fid_{fid}" / "*" / "*" / f"{tile}_locs.csv")):
+        if Path(lc).parent.parent.name not in windows:
+            continue
+        cells = pd.read_csv(lc)["cell"].astype(int).to_numpy() - 1
+        mask[cells // grid, cells % grid] = True
+    return mask
+
+
 def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
-                  max_tiles_per_fid=4, outline_polygons=True):
+                  max_tiles_per_fid=4, outline_polygons=True,
+                  forest_root="embeddings/joint_forest", show_forest=True,
+                  forest_windows=("evt", "aft")):
     """For each FID: RGB image vs ground-truth vs predicted class grid, one row per tile.
 
     Ground truth uses a dedicated 'background (unlabeled)' color for everything
     outside the disturbance polygon, kept distinct from the model's 'forest' class.
     When outline_polygons is True, the true polygon boundary is drawn (red) on top
-    of the ground-truth and predicted panels.
+    of the ground-truth and predicted panels. When show_forest is True, the cells
+    sampled as forest training tokens (from forest_root) are shaded green on the
+    RGB panel.
     """
     rows = []
     for fid in fids:
@@ -162,6 +187,18 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
             axes[k][0].imshow(rgb, interpolation="nearest")
         else:
             axes[k][0].text(0.5, 0.5, "no RGB", ha="center", va="center", fontsize=8)
+
+        # shade forest training cells green on the RGB panel
+        if show_forest:
+            fmask = _forest_cells(forest_root, fid, s["tile"], forest_windows, gh)
+            if fmask.any():
+                out_h, out_w = (rgb.shape[:2] if rgb is not None else (gh, gw))
+                overlay = np.zeros((gh, gw, 4))
+                overlay[..., 1] = 0.5                     # green channel
+                overlay[..., 3] = fmask * 0.55          # alpha only on sampled cells
+                axes[k][0].imshow(overlay, extent=(-0.5, out_w - 0.5, out_h - 0.5, -0.5),
+                                  interpolation="nearest")
+
         dist = "/".join(sorted({ID_TO_CLASS[c] for _, c in ds.fid_polys.get(fid, [])})) or "?"
         axes[k][0].set_title(
             f"fid {fid} · {s['tile']} · {_fmt_date(s['s2_id'])} · {s['window']}\n{dist}",
@@ -178,7 +215,11 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
         for ax in axes[k]:
             ax.set_xticks([]); ax.set_yticks([])
     handles = [plt.Rectangle((0, 0), 1, 1, color=MAP_COLORS[c]) for c in range(len(MAP_NAMES))]
-    fig.legend(handles, MAP_NAMES, loc="lower center", ncol=4, fontsize=8)
+    names = list(MAP_NAMES)
+    if show_forest:
+        handles.append(plt.Rectangle((0, 0), 1, 1, color=(0, 0.5, 0, 0.55)))
+        names.append("forest training cells")
+    fig.legend(handles, names, loc="lower center", ncol=4, fontsize=8)
     fig.tight_layout(rect=[0, 0.06, 1, 1])
     _finish(fig, out, show)
 
