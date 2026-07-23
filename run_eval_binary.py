@@ -27,7 +27,7 @@ from sklearn.metrics import (accuracy_score, classification_report,
                              precision_score, recall_score, f1_score,
                              confusion_matrix)
 
-from seg_dataset import DisturbanceSegDataset, CLASS_TO_ID
+from seg_dataset import DisturbanceSegDataset, CLASS_TO_ID, common_tile_keys
 from rand_forest import (FOREST_ROOT, load_or_make_split,
                          build_pixel_dataset_forest, balance_classes, make_rf)
 from log_reg import make_lr
@@ -176,6 +176,9 @@ def main():
     ap.add_argument("--fids", nargs="*", default=None,
                     help="test FIDs to map (default: first 4 test FIDs)")
     ap.add_argument("--results-root", default="results_binary")
+    ap.add_argument("--align-with", nargs="*", default=None,
+                    help="modalities to intersect tiles with (e.g. joint s2_l2a) "
+                         "so class tokens are identical across runs; forest is left as is")
     args = ap.parse_args()
 
     os.makedirs(args.results_root, exist_ok=True)
@@ -183,6 +186,17 @@ def main():
     # ---- load everything once (heavy) ----
     ds = DisturbanceSegDataset(args.embeddings_root, args.tiles_root, args.shp,
                                embed_kind=args.embed_kind)
+
+    # keep only tiles shared by all requested modalities -> identical class tokens
+    if args.align_with:
+        mods = sorted(set(args.align_with) | {args.embed_kind})
+        common = common_tile_keys(args.embeddings_root, mods, windows=("evt", "aft"))
+        before = len(ds.samples)
+        ds.samples = [s for s in ds.samples
+                      if (s["fid"], s["window"], s["s2_id"], s["tile"]) in common]
+        print(f"[align] samples {before} -> {len(ds.samples)} "
+              f"(common tiles across {mods}, {len(common)} keys)", flush=True)
+
     X, y, fids = build_pixel_dataset_forest(ds, args.forest_root)
 
     # ---- keep ONLY forest (0) and clear-cut bare soil (1) ----
@@ -199,6 +213,10 @@ def main():
     te = np.isin(fids_str, list(test_fids))
     tr_bal = balance_classes(y, tr, per_class=2500)      # train balanced; test kept full
     print(f"[data] train {int(tr_bal.sum())} tok | test {int(te.sum())} tok (full)", flush=True)
+
+    # shared, split-level figure (model-independent); binary classes only
+    ep.plot_token_distribution(y, tr, tr_bal, te,
+                               out=os.path.join(args.results_root, "token_distribution.png"))
 
     # test FIDs to visualize (from the test set, so they are always valid)
     sample_fids = {s["fid"] for s in ds.samples}

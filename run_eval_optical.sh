@@ -23,5 +23,6 @@ python run_eval.py \
     --embed-kind s2_l2a \
     --forest-root embeddings/s2_l2a_forest \
     --results-root results_optical \
+    --align-with joint s2_l2a \
     --fids 83 389 25 3
 echo "End: $(date)"

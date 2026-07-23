@@ -17,7 +17,7 @@ import joblib
 import numpy as np
 from sklearn.metrics import accuracy_score, classification_report
 
-from seg_dataset import DisturbanceSegDataset
+from seg_dataset import DisturbanceSegDataset, common_tile_keys
 from rand_forest import (FOREST_ROOT, ID_TO_CLASS, load_or_make_split,
                          build_pixel_dataset_forest, balance_classes, make_rf,
                          training_size_sensitivity)
@@ -41,6 +41,9 @@ def main():
     ap.add_argument("--fids", nargs="*", default=None,
                     help="test FIDs to map (default: first 4 test FIDs)")
     ap.add_argument("--results-root", default="results")
+    ap.add_argument("--align-with", nargs="*", default=None,
+                    help="modalities to intersect tiles with (e.g. joint s2_l2a) "
+                         "so class tokens are identical across runs; forest is left as is")
     args = ap.parse_args()
 
     os.makedirs(args.results_root, exist_ok=True)
@@ -48,6 +51,17 @@ def main():
     # ---- load everything once (heavy) ----
     ds = DisturbanceSegDataset(args.embeddings_root, args.tiles_root, args.shp,
                                embed_kind=args.embed_kind)
+
+    # keep only tiles shared by all requested modalities -> identical class tokens
+    if args.align_with:
+        mods = sorted(set(args.align_with) | {args.embed_kind})
+        common = common_tile_keys(args.embeddings_root, mods, windows=("evt", "aft"))
+        before = len(ds.samples)
+        ds.samples = [s for s in ds.samples
+                      if (s["fid"], s["window"], s["s2_id"], s["tile"]) in common]
+        print(f"[align] samples {before} -> {len(ds.samples)} "
+              f"(common tiles across {mods}, {len(common)} keys)", flush=True)
+
     X, y, fids = build_pixel_dataset_forest(ds, args.forest_root)
     fids_str = fids.astype(str)
 

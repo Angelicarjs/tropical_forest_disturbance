@@ -108,6 +108,35 @@ class DisturbanceSegDataset(Dataset):
         return x, y
 
 
+def common_tile_keys(embeddings_root, modalities, windows=("evt", "aft")):
+    """Return the set of (fid, window, s2_id, tile) keys present in ALL modalities.
+
+    Used to align the per-token dataset across modalities so that joint and
+    optical are trained/tested on the EXACT same class tokens. Since the label
+    mask is rasterized from the shared S2 tile (not the embedding), any tile
+    present in every modality contributes identical class cells and labels;
+    only the 768-dim features differ. Intersecting at the tile level is
+    therefore equivalent to intersecting at the token level for classes 1..6.
+
+    The date directory is "<s2id>" for s2_l2a and "<s2id>__<s1id>" for joint;
+    splitting on "__" yields the shared s2_id in both layouts.
+    """
+    windows = set(windows)
+    per_mod = []
+    for mod in modalities:
+        keys = set()
+        for npy in glob.glob(str(Path(embeddings_root) / mod / "fid_*" / "*" / "*" / "tile_*.npy")):
+            p = Path(npy)
+            window = p.parent.parent.name
+            fid = p.parent.parent.parent.name.replace("fid_", "")
+            if window not in windows:
+                continue
+            s2_id = p.parent.name.split("__")[0]
+            keys.add((fid, window, s2_id, p.stem))
+        per_mod.append(keys)
+    return set.intersection(*per_mod) if per_mod else set()
+
+
 if __name__ == "__main__":
     # Smoke test
     import os

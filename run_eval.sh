@@ -19,5 +19,5 @@ export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF / LogisticRegressio
 export PYTHONWARNINGS="ignore::FutureWarning"
 
 echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | Start: $(date)"
-python run_eval.py --fids 83 389 25 3
+python run_eval.py --align-with joint s2_l2a --fids 83 389 25 3
 echo "End: $(date)"
