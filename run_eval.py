@@ -6,8 +6,9 @@ Regression) it:
   - trains on the balanced train+val tokens (<=2500/class); test kept full
   - saves artifacts (model.joblib, pred.npy, y_test.npy, test_fids.npy)
   - saves figures: confusion.png, prf.png, fidmaps.png, training_size_sensitivity.png
-into results/rf/ and results/log_reg/. A shared results/token_distribution.png
-is written once. The notebook only reads these outputs.
+into <results-root>/rf/ and <results-root>/log_reg/. A shared
+<results-root>/token_distribution.png is written once (all under --results-root,
+so different modalities never overwrite each other). The notebook only reads these outputs.
 
 Run on the cluster:  sbatch run_eval.sh
 """
@@ -24,8 +25,8 @@ from rand_forest import (FOREST_ROOT, ID_TO_CLASS, load_or_make_split,
 from log_reg import make_lr
 import eval_plots as ep
 
-MODELS = [("RandomForest", make_rf, "results/rf"),
-          ("LogisticRegression", make_lr, "results/log_reg")]
+MODELS = [("RandomForest", make_rf, "rf"),
+          ("LogisticRegression", make_lr, "log_reg")]
 
 
 def main():
@@ -81,7 +82,8 @@ def main():
     map_fids = args.fids or sorted((f for f in test_fids if f in sample_fids), key=int)[:4]
     print(f"[maps] FIDs: {map_fids}", flush=True)
 
-    for name, make, outdir in MODELS:
+    for name, make, subdir in MODELS:
+        outdir = os.path.join(args.results_root, subdir)
         os.makedirs(outdir, exist_ok=True)
         print(f"[{name}] training...", flush=True)
         clf = make()

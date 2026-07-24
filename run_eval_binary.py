@@ -12,7 +12,8 @@ For each model (Random Forest, Logistic Regression) it:
   - trains on the balanced train+val tokens; test kept full
   - saves artifacts (model.joblib, pred.npy, y_test.npy, test_fids.npy)
   - saves figures: confusion.png, prf.png, fidmaps.png, learning_curve.png
-into results_binary/rf/ and results_binary/log_reg/.
+into <results-root>/rf/ and <results-root>/log_reg/ (all under --results-root,
+so different modalities never overwrite each other).
 """
 import os
 import argparse
@@ -39,8 +40,8 @@ POS_ID = CLASS_TO_ID["Clear-cut bare soil"]  # 1
 BIN_LABELS = [NEG_ID, POS_ID]
 BIN_NAMES = ["forest", "clear-cut bare soil"]
 
-MODELS = [("RandomForest", make_rf, "results_binary/rf"),
-          ("LogisticRegression", make_lr, "results_binary/log_reg")]
+MODELS = [("RandomForest", make_rf, "rf"),
+          ("LogisticRegression", make_lr, "log_reg")]
 
 
 def plot_confusion_binary(y_true, y_pred, model_name, out):
@@ -223,7 +224,8 @@ def main():
     map_fids = args.fids or sorted((f for f in test_fids if f in sample_fids), key=int)[:4]
     print(f"[maps] FIDs: {map_fids}", flush=True)
 
-    for name, make, outdir in MODELS:
+    for name, make, subdir in MODELS:
+        outdir = os.path.join(args.results_root, subdir)
         os.makedirs(outdir, exist_ok=True)
         print(f"[{name}] training...", flush=True)
         clf = make()
