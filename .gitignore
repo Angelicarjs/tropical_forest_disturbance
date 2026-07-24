@@ -5,3 +5,5 @@ joint_embe_forest/
 s2_l2a.zip
 results/rf/model.joblib
 *.joblib
+__pycache__/
+*.pyc
