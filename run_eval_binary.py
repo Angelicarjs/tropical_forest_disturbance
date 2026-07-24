@@ -219,9 +219,13 @@ def main():
     ep.plot_token_distribution(y, tr, tr_bal, te,
                                out=os.path.join(args.results_root, "token_distribution.png"))
 
-    # test FIDs to visualize (from the test set, so they are always valid)
-    sample_fids = {s["fid"] for s in ds.samples}
-    map_fids = args.fids or sorted((f for f in test_fids if f in sample_fids), key=int)[:4]
+    # test FIDs to visualize (from the test set, so they are always valid).
+    # For the binary probe only clear-cut FIDs give a meaningful forest-vs-clearcut
+    # map; other disturbance types are not in the binary label space and the model
+    # can only force them into forest/clear-cut.
+    cc_fids = {s["fid"] for s in ds.samples
+               if s["fid"] in ds.fid_polys and ds.fid_polys[s["fid"]][0][1] == POS_ID}
+    map_fids = args.fids or sorted((f for f in test_fids if f in cc_fids), key=int)[:4]
     print(f"[maps] FIDs: {map_fids}", flush=True)
 
     for name, make, subdir in MODELS:
