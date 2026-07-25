@@ -135,17 +135,23 @@ def _outline_polygon(ax, fine, out_h, out_w):
                colors="red", linewidths=1.0)
 
 
-def _forest_cells(forest_root, fid, tile, windows, grid=15):
+def _forest_cells(forest_root, fid, tile, windows, grid=15, s2_id=None):
     """Boolean (grid, grid) mask of cells sampled as forest (class 0) tokens.
 
     Cells come from tile_N_locs.csv ('cell' = 1-based row-major index over the
     grid x grid token grid), aggregated across the given windows/dates. Uses the
     same forest_root as the classifier, so joint and optical runs each show the
     cells actually used by that modality.
+
+    When s2_id is given, only the matching acquisition is used, so the overlay
+    reflects the single date shown in the panel instead of the union of every
+    date in `windows`.
     """
     mask = np.zeros((grid, grid), bool)
     for lc in glob.glob(str(Path(forest_root) / f"fid_{fid}" / "*" / "*" / f"{tile}_locs.csv")):
         if Path(lc).parent.parent.name not in windows:
+            continue
+        if s2_id is not None and Path(lc).parent.name.split("__")[0] != s2_id:
             continue
         cells = pd.read_csv(lc)["cell"].astype(int).to_numpy() - 1
         mask[cells // grid, cells % grid] = True
@@ -190,7 +196,8 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
 
         # shade forest training cells green on the RGB panel
         if show_forest:
-            fmask = _forest_cells(forest_root, fid, s["tile"], forest_windows, gh)
+            fmask = _forest_cells(forest_root, fid, s["tile"], (s["window"],), gh,
+                                  s2_id=s["s2_id"])
             if fmask.any():
                 out_h, out_w = (rgb.shape[:2] if rgb is not None else (gh, gw))
                 overlay = np.zeros((gh, gw, 4))
