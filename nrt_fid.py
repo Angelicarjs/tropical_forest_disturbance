@@ -24,6 +24,7 @@ from rasterio.features import rasterize
 from rasterio.transform import from_origin
 
 from rand_forest import majority_downsample
+from seg_dataset import CLASS_TO_ID
 
 TILES = "/share/castor/home/e2406749/thesis_tiles_120px"
 EMB_ROOT = "embeddings/joint"
@@ -36,8 +37,14 @@ TILE_M = 1200.0                       # one tile = 120 px x 10 m
 GRID = 15                             # tokens per tile side
 
 
-def fid_curve(fid, clf, polys):
-    """One row per acquisition: 1 - p(forest) over all polygon tokens of the FID."""
+def fid_curve(fid, clf, polys, cls_id):
+    """One row per acquisition, over all polygon tokens of the FID.
+
+    Two criteria in parallel:
+        p_dist   1 - p(forest)          -- did it stop being forest?
+        p_class  p(cls_id)              -- did it become this FID's actual class?
+    plus n_nonforest, the count of tokens whose argmax is not forest.
+    """
     rows = []
     masks = {}
     for npy in glob.glob(f"{EMB_ROOT}/fid_{fid}/*/*/tile_*.npy"):
@@ -58,12 +65,16 @@ def fid_curve(fid, clf, polys):
                      "win": npy.split("/")[3],
                      "tile": tile,
                      "n_tok": int(inside.sum()),
-                     "p_sum": float((1 - proba[:, 0]).sum())})
+                     "p_sum": float((1 - proba[:, 0]).sum()),
+                     "pc_sum": float(proba[:, cls_id].sum()),
+                     "n_nonforest": int((proba.argmax(1) != 0).sum())})
 
     out = (pd.DataFrame(rows).groupby(["date", "win"], as_index=False)
              .agg(n_tok=("n_tok", "sum"), p_sum=("p_sum", "sum"),
+                  pc_sum=("pc_sum", "sum"), n_nonforest=("n_nonforest", "sum"),
                   n_tiles=("tile", "nunique")))
     out["p_dist"] = out.p_sum / out.n_tok          # token-weighted over the polygon
+    out["p_class"] = out.pc_sum / out.n_tok
     out["date"] = pd.to_datetime(out["date"], format="%Y%m%d")
     return out.sort_values("date").reset_index(drop=True)
 
@@ -141,7 +152,10 @@ def plot_fid(fid, curve, frames, fine, nrow, ncol, sub, model_name):
     ax = fig.add_subplot(gs[0, :])
     ax.plot(range(T), curve.p_dist, "-", color="lightgray", zorder=1)
     ax.scatter(range(T), curve.p_dist, c=[WIN_COLORS[w] for w in curve.win],
-               s=70, edgecolors="black", lw=0.5, zorder=3)
+               s=70, edgecolors="black", lw=0.5, zorder=3, label="1 - p(forest)")
+    # Second criterion: probability of this FID's actual disturbance class.
+    ax.plot(range(T), curve.p_class, "--", color="tab:purple", lw=1.5, zorder=2,
+            label=f"p({sub['CLASSNAME'].iloc[0]})")
 
     view = pd.to_datetime(sub["VIEW_DATE"].iloc[0])
     p = float(np.interp(view.value, [t.value for t in curve.date], range(T)))
@@ -151,7 +165,7 @@ def plot_fid(fid, curve, frames, fine, nrow, ncol, sub, model_name):
     ax.set_xticks(range(T))
     ax.set_xticklabels([])
     ax.set_ylim(-0.02, 1.02)
-    ax.set_ylabel("1 - p(forest)")
+    ax.set_ylabel("probability")
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8)
     ax.set_title(f"fid {fid} - {sub['CLASSNAME'].iloc[0]} - {model_name}\n"
@@ -205,10 +219,12 @@ def main():
         sub = gdf[gdf["fid"] == str(fid)]
         polys = [(g, 1) for g in sub.geometry]
 
-        curve = fid_curve(fid, clf, polys)
+        cls_id = CLASS_TO_ID[sub["CLASSNAME"].iloc[0]]
+        curve = fid_curve(fid, clf, polys, cls_id)
         print(f"\n=== fid {fid} | {sub['CLASSNAME'].iloc[0]} | "
               f"VIEW_DATE {pd.to_datetime(sub['VIEW_DATE'].iloc[0]).date()}")
-        print(curve[["date", "win", "n_tok", "n_tiles", "p_dist"]].to_string(index=False))
+        print(curve[["date", "win", "n_tok", "n_tiles",
+                     "p_dist", "p_class", "n_nonforest"]].to_string(index=False))
 
         frames, fine, nrow, ncol = build_mosaics(fid, clf, polys)
         fig = plot_fid(fid, curve, frames, fine, nrow, ncol, sub, args.model)
