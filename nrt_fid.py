@@ -9,7 +9,7 @@ Modes:
     optical         CROMA optical (S2),       7-class model
     optical_binary  CROMA optical (S2),       forest vs. non-forest model
 
-Figures, per FID:
+Figures, saved as <save>/fid_<FID>/<model>/:
     nrt_fid<FID>_<mode>_<model>.pdf   one panel per mode: curve + class mosaic + RGB
     nrt_fid<FID>_compare_<model>.pdf  multiclass modes on top, binary modes below
 
@@ -19,8 +19,8 @@ different question than the multiclass one and the two never share an axes.
 
 Usage:
     python nrt_fid.py --fid 28
-    python nrt_fid.py --fid 28 63 --model rf --save results_nrt
-    python nrt_fid.py --fid 28 --mode joint optical
+    python nrt_fid.py --fid 28 63 --model all --save results_nrt
+    python nrt_fid.py --fid 28 --mode joint optical --model log_reg rf
 """
 import argparse
 import glob
@@ -49,6 +49,9 @@ MODES = {
     "optical":        {"emb": "embeddings/s2_l2a", "res": "results_optical",        "binary": False},
     "optical_binary": {"emb": "embeddings/s2_l2a", "res": "results_binary_optical", "binary": True},
 }
+# Model subdirectory names, as run_eval.py / run_eval_binary.py write them.
+MODEL_NAMES = ["log_reg", "rf"]
+
 # joint and its binary twin share a color, so the comparison figure reads as
 # "modality = color, label space = row".
 MODE_COLORS = {"joint": "tab:blue", "joint_binary": "tab:blue",
@@ -305,7 +308,8 @@ def main():
     ap.add_argument("--fid", nargs="+", required=True)
     ap.add_argument("--mode", nargs="+", default=["all"],
                     help=f"any of {list(MODES)}, or 'all'")
-    ap.add_argument("--model", default="log_reg", help="log_reg | rf")
+    ap.add_argument("--model", nargs="+", default=["log_reg"],
+                    help=f"any of {MODEL_NAMES}, or 'all'")
     ap.add_argument("--save", default=None, metavar="DIR",
                     help="save PDFs into DIR; omitted -> show on screen")
     ap.add_argument("--no-panels", action="store_true",
@@ -317,70 +321,86 @@ def main():
     if bad:
         ap.error(f"unknown mode(s) {bad}; pick from {list(MODES)} or 'all'")
 
+    models = list(MODEL_NAMES) if "all" in args.model else args.model
+    bad = [m for m in models if m not in MODEL_NAMES]
+    if bad:
+        ap.error(f"unknown model(s) {bad}; pick from {MODEL_NAMES} or 'all'")
+
     import matplotlib
     if args.save:
         matplotlib.use("Agg")
-        os.makedirs(args.save, exist_ok=True)
     import matplotlib.pyplot as plt
 
-    # Load each mode's classifier once. A mode whose model or embeddings are
-    # missing is skipped with a warning instead of killing the whole run.
-    clfs = {}
-    for mode in modes:
-        path = os.path.join(MODES[mode]["res"], args.model, "model.joblib")
-        if not os.path.exists(path):
-            print(f"[skip] {mode}: no model at {path}")
-            continue
-        if not os.path.isdir(MODES[mode]["emb"]):
-            print(f"[skip] {mode}: no embeddings at {MODES[mode]['emb']}")
-            continue
-        clfs[mode] = joblib.load(path)
-    if not clfs:
-        ap.error("no usable mode: check --model and the results*/ directories")
+    # Resolve every (model, mode) pair first, without loading anything: a random
+    # forest is hundreds of MB in memory, so the classifiers of one model are
+    # held only while that model is being plotted. A pair whose model or
+    # embeddings are missing is skipped with a warning instead of killing the run.
+    usable = {}
+    for model in models:
+        for mode in modes:
+            path = os.path.join(MODES[mode]["res"], model, "model.joblib")
+            if not os.path.exists(path):
+                print(f"[skip] {model} / {mode}: no model at {path}")
+                continue
+            if not os.path.isdir(MODES[mode]["emb"]):
+                print(f"[skip] {model} / {mode}: no embeddings at {MODES[mode]['emb']}")
+                continue
+            usable.setdefault(model, {})[mode] = path
+    if not usable:
+        ap.error("no usable model/mode pair: check --model and the results*/ directories")
 
     gdf = gpd.read_file(SHP).to_crs("EPSG:3857")
     gdf["fid"] = gdf["fid"].astype(int).astype(str)
 
-    def out(fig, name):
+    def out(fig, name, fid, model):
+        """Save under <save>/fid_<fid>/<model>/, one directory per pair."""
         if args.save:
-            path = os.path.join(args.save, name)
+            d = os.path.join(args.save, f"fid_{fid}", model)
+            os.makedirs(d, exist_ok=True)
+            path = os.path.join(d, name)
             fig.savefig(path, bbox_inches="tight")
             plt.close(fig)
             print(f"saved {path}")
         else:
             plt.show()
 
-    for fid in args.fid:
-        sub = gdf[gdf["fid"] == str(fid)]
-        polys = [(g, 1) for g in sub.geometry]
-        cls_id = CLASS_TO_ID[sub["CLASSNAME"].iloc[0]]
-        print(f"\n=== fid {fid} | {sub['CLASSNAME'].iloc[0]} | "
-              f"VIEW_DATE {pd.to_datetime(sub['VIEW_DATE'].iloc[0]).date()}")
+    for model, paths in usable.items():
+        clfs = {mode: joblib.load(p) for mode, p in paths.items()}
 
-        curves = {}
-        for mode, clf in clfs.items():
-            binary = MODES[mode]["binary"]
-            curve = fid_curve(fid, clf, polys, MODES[mode]["emb"],
-                              cls_id=None if binary else cls_id)
-            if curve.empty:
-                print(f"[skip] {mode}: no tile of fid {fid} touches the polygon")
-                continue
-            curves[mode] = curve
+        for fid in args.fid:
+            sub = gdf[gdf["fid"] == str(fid)]
+            polys = [(g, 1) for g in sub.geometry]
+            cls_id = CLASS_TO_ID[sub["CLASSNAME"].iloc[0]]
+            print(f"\n=== {model} | fid {fid} | {sub['CLASSNAME'].iloc[0]} | "
+                  f"VIEW_DATE {pd.to_datetime(sub['VIEW_DATE'].iloc[0]).date()}")
 
-            cols = ["date", "win", "n_tok", "n_tiles", "p_dist", "n_nonforest"]
-            if not binary:
-                cols.insert(5, "p_class")
-            print(f"\n--- {mode} / {args.model}")
-            print(curve[cols].to_string(index=False))
+            curves = {}
+            for mode, clf in clfs.items():
+                binary = MODES[mode]["binary"]
+                curve = fid_curve(fid, clf, polys, MODES[mode]["emb"],
+                                  cls_id=None if binary else cls_id)
+                if curve.empty:
+                    print(f"[skip] {mode}: no tile of fid {fid} touches the polygon")
+                    continue
+                curves[mode] = curve
 
-            if not args.no_panels:
-                frames, fine, nrow, ncol = build_mosaics(fid, clf, polys, MODES[mode]["emb"])
-                fig = plot_fid(fid, curve, frames, fine, nrow, ncol, sub, mode, args.model)
-                out(fig, f"nrt_fid{fid}_{mode}_{args.model}.pdf")
+                cols = ["date", "win", "n_tok", "n_tiles", "p_dist", "n_nonforest"]
+                if not binary:
+                    cols.insert(5, "p_class")
+                print(f"\n--- {mode} / {model}")
+                print(curve[cols].to_string(index=False))
 
-        if len(curves) > 1:
-            out(plot_compare(fid, curves, sub, args.model),
-                f"nrt_fid{fid}_compare_{args.model}.pdf")
+                if not args.no_panels:
+                    frames, fine, nrow, ncol = build_mosaics(fid, clf, polys,
+                                                             MODES[mode]["emb"])
+                    fig = plot_fid(fid, curve, frames, fine, nrow, ncol, sub, mode, model)
+                    out(fig, f"nrt_fid{fid}_{mode}_{model}.pdf", fid, model)
+
+            if len(curves) > 1:
+                out(plot_compare(fid, curves, sub, model),
+                    f"nrt_fid{fid}_compare_{model}.pdf", fid, model)
+
+        clfs.clear()      # free the forests before loading the next model
 
 
 if __name__ == "__main__":
