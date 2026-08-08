@@ -15,15 +15,17 @@
 #   ./run_nrt.sh                 # the FIDS list below
 #   ./run_nrt.sh 28 63           # ad-hoc list
 #   THROTTLE=2 ./run_nrt.sh      # same list, at most 2 tasks at a time
+#   VERSION=1 ./run_nrt.sh       # another cloud filter (default 3, the strictest)
 
 FIDS=(28 214 389 25)
+VERSION=${VERSION:-3}            # cloud filter restricting the acquisitions
 
 if [ -z "$SLURM_JOB_ID" ]; then                 # login node: submit, do not compute
     [ $# -gt 0 ] && FIDS=("$@")
     mkdir -p results_nrt                        # slurm opens the log before the task runs
     RANGE="0-$((${#FIDS[@]} - 1))${THROTTLE:+%$THROTTLE}"
-    echo "submitting ${#FIDS[@]} FIDs (${FIDS[*]}) as array $RANGE"
-    exec sbatch --array="$RANGE" "$0" "${FIDS[@]}"
+    echo "submitting ${#FIDS[@]} FIDs (${FIDS[*]}) as array $RANGE, cloud filter v$VERSION"
+    exec sbatch --array="$RANGE" --export=ALL,VERSION="$VERSION" "$0" "${FIDS[@]}"
 fi
 
 FIDS=("$@")                                     # the list handed over by the submit pass
@@ -43,6 +45,6 @@ export MPLBACKEND=Agg   # matplotlib without GUI
 export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF
 export PYTHONWARNINGS="ignore::FutureWarning"
 
-echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | FID: $FID | Start: $(date)"
-python nrt_fid.py --fid "$FID" --mode all --model all --save results_nrt
+echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | FID: $FID | v$VERSION | Start: $(date)"
+python nrt_fid.py --fid "$FID" --mode all --model all --version "$VERSION" --save results_nrt
 echo "End: $(date)"

@@ -40,6 +40,10 @@ from seg_dataset import CLASS_TO_ID
 
 TILES = "/share/castor/home/e2406749/thesis_tiles_120px"
 SHP = "data_shp/label_polygons.shp"
+# Tiles on disk are the union of the three cloud filters, so every curve has to
+# be restricted to one of them. v3 is the strictest (Cloud Score+ with dilation).
+CSV_TEMPLATE = "data_csv/v{version}_images_s2_s1.csv"
+DEFAULT_VERSION = "3"
 
 # One entry per (embedding modality, label space). `res` is the --results-root
 # the matching run_eval*.sh wrote into, so the model always matches the tokens.
@@ -80,7 +84,32 @@ def _palette(binary):
     return CMAP, NORM, NAMES, [CLASS_COLORS[c] for c in range(7)]
 
 
-def fid_curve(fid, clf, polys, emb_root, cls_id=None):
+def allowed_ids(fid, version=DEFAULT_VERSION):
+    """S2 and S1 image_ids that this cloud filter admits for this FID."""
+    df = pd.read_csv(CSV_TEMPLATE.format(version=version))
+    df = df[df["fid"].astype(int) == int(fid)]
+    s2, s1 = set(), set()
+    for win in ("bef", "evt", "aft"):
+        for _, row in df.iterrows():
+            for col, acc in ((f"{win}IdsS2", s2), (f"{win}IdsS1", s1)):
+                acc.update(x.strip() for x in str(row.get(col, "")).split(",")
+                           if x.strip() and x.strip() != "nan")
+    return s2, s1
+
+
+def admitted(img_dir, s2_ok, s1_ok):
+    """Is this acquisition directory admitted by the filter?
+
+    Joint directories are named "<s2_id>__<s1_id>" and need both sides admitted;
+    unimodal ones carry a single id.
+    """
+    if "__" in img_dir:
+        s2_id, s1_id = img_dir.split("__", 1)
+        return s2_id in s2_ok and s1_id in s1_ok
+    return img_dir in s2_ok or img_dir in s1_ok
+
+
+def fid_curve(fid, clf, polys, emb_root, cls_id=None, version=DEFAULT_VERSION):
     """One row per acquisition, pooled over all polygon tokens of the FID.
 
         p_dist   1 - p(forest)   -- did it stop being forest?
@@ -92,8 +121,11 @@ def fid_curve(fid, clf, polys, emb_root, cls_id=None):
     """
     rows = []
     masks = {}
+    s2_ok, s1_ok = allowed_ids(fid, version)
     for npy in glob.glob(f"{emb_root}/fid_{fid}/*/*/tile_*.npy"):
         win, img_dir, tile = _parts(npy, emb_root)
+        if not admitted(img_dir, s2_ok, s1_ok):
+            continue                               # rejected by the cloud filter
 
         if tile not in masks:
             tifs = glob.glob(f"{TILES}/s2_l2a/fid_{fid}/*/*/{tile}.tif")
@@ -133,7 +165,7 @@ def fid_curve(fid, clf, polys, emb_root, cls_id=None):
     return out.sort_values("date").reset_index(drop=True)
 
 
-def build_mosaics(fid, clf, polys, emb_root):
+def build_mosaics(fid, clf, polys, emb_root, version=DEFAULT_VERSION):
     """Class-map and RGB mosaic per date, plus the polygon mask over the mosaic.
 
     The tiling grid is regular and non-overlapping (tile_pipeline.create_tile_grid),
@@ -154,8 +186,11 @@ def build_mosaics(fid, clf, polys, emb_root):
     ncol = max(c for _, c in pos.values()) + 1
 
     frames = {}
+    s2_ok, s1_ok = allowed_ids(fid, version)
     for npy in glob.glob(f"{emb_root}/fid_{fid}/*/*/tile_*.npy"):
         win, img_dir, tile = _parts(npy, emb_root)
+        if not admitted(img_dir, s2_ok, s1_ok):
+            continue                               # rejected by the cloud filter
         s2_id = img_dir.split("__")[0]             # joint dirs are "<s2id>__<s1id>"
         date = re.search(r"(\d{8})T", img_dir).group(1)
 
@@ -314,6 +349,9 @@ def main():
                     help="save PDFs into DIR; omitted -> show on screen")
     ap.add_argument("--no-panels", action="store_true",
                     help="only the comparison figure, skip the per-mode panels")
+    ap.add_argument("--version", default=DEFAULT_VERSION, choices=["1", "2", "3"],
+                    help="cloud filter version restricting the acquisitions "
+                         f"(default: {DEFAULT_VERSION}, the strictest)")
     args = ap.parse_args()
 
     modes = list(MODES) if "all" in args.mode else args.mode
@@ -378,7 +416,8 @@ def main():
             for mode, clf in clfs.items():
                 binary = MODES[mode]["binary"]
                 curve = fid_curve(fid, clf, polys, MODES[mode]["emb"],
-                                  cls_id=None if binary else cls_id)
+                                  cls_id=None if binary else cls_id,
+                                  version=args.version)
                 if curve.empty:
                     print(f"[skip] {mode}: no tile of fid {fid} touches the polygon")
                     continue
@@ -392,7 +431,8 @@ def main():
 
                 if not args.no_panels:
                     frames, fine, nrow, ncol = build_mosaics(fid, clf, polys,
-                                                             MODES[mode]["emb"])
+                                                             MODES[mode]["emb"],
+                                                             version=args.version)
                     fig = plot_fid(fid, curve, frames, fine, nrow, ncol, sub, mode, model)
                     out(fig, f"nrt_fid{fid}_{mode}_{model}.pdf", fid, model)
 
