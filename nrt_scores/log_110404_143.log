@@ -1,0 +1,6 @@
+Node: sn4 | FID: 378 | log_reg rf | v3 | Start: dim. 09 août 2026 13:59:16 CEST
+log_reg / joint: 14 acquisitions -> nrt_scores/joint_log_reg_v3/fid_378.csv
+log_reg / optical: 19 acquisitions -> nrt_scores/optical_log_reg_v3/fid_378.csv
+rf / joint: 14 acquisitions -> nrt_scores/joint_rf_v3/fid_378.csv
+rf / optical: 19 acquisitions -> nrt_scores/optical_rf_v3/fid_378.csv
+End: dim. 09 août 2026 13:59:33 CEST

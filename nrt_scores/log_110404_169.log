@@ -1,0 +1,6 @@
+Node: sn2 | FID: 85 | log_reg rf | v3 | Start: dim. 09 août 2026 14:00:47 CEST
+log_reg / joint: 14 acquisitions -> nrt_scores/joint_log_reg_v3/fid_85.csv
+log_reg / optical: 21 acquisitions -> nrt_scores/optical_log_reg_v3/fid_85.csv
+rf / joint: 14 acquisitions -> nrt_scores/joint_rf_v3/fid_85.csv
+rf / optical: 21 acquisitions -> nrt_scores/optical_rf_v3/fid_85.csv
+End: dim. 09 août 2026 14:01:18 CEST

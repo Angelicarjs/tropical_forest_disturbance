@@ -1,0 +1,6 @@
+Node: sn4 | FID: 220 | log_reg rf | v3 | Start: dim. 09 août 2026 13:56:46 CEST
+log_reg / joint: 2 acquisitions -> nrt_scores/joint_log_reg_v3/fid_220.csv
+log_reg / optical: 2 acquisitions -> nrt_scores/optical_log_reg_v3/fid_220.csv
+rf / joint: 2 acquisitions -> nrt_scores/joint_rf_v3/fid_220.csv
+rf / optical: 2 acquisitions -> nrt_scores/optical_rf_v3/fid_220.csv
+End: dim. 09 août 2026 13:56:54 CEST

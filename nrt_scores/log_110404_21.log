@@ -1,0 +1,6 @@
+Node: sn2 | FID: 142 | log_reg rf | v3 | Start: dim. 09 août 2026 13:55:46 CEST
+log_reg / joint: 1 acquisitions -> nrt_scores/joint_log_reg_v3/fid_142.csv
+log_reg / optical: 1 acquisitions -> nrt_scores/optical_log_reg_v3/fid_142.csv
+rf / joint: 1 acquisitions -> nrt_scores/joint_rf_v3/fid_142.csv
+rf / optical: 1 acquisitions -> nrt_scores/optical_rf_v3/fid_142.csv
+End: dim. 09 août 2026 13:55:54 CEST

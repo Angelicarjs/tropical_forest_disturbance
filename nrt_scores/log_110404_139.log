@@ -1,0 +1,6 @@
+Node: sn1 | FID: 372 | log_reg rf | v3 | Start: dim. 09 août 2026 13:59:16 CEST
+log_reg / joint: 12 acquisitions -> nrt_scores/joint_log_reg_v3/fid_372.csv
+log_reg / optical: 19 acquisitions -> nrt_scores/optical_log_reg_v3/fid_372.csv
+rf / joint: 12 acquisitions -> nrt_scores/joint_rf_v3/fid_372.csv
+rf / optical: 19 acquisitions -> nrt_scores/optical_rf_v3/fid_372.csv
+End: dim. 09 août 2026 14:00:35 CEST

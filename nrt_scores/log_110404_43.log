@@ -1,0 +1,6 @@
+Node: sn4 | FID: 186 | log_reg rf | v3 | Start: dim. 09 août 2026 13:56:16 CEST
+log_reg / joint: 10 acquisitions -> nrt_scores/joint_log_reg_v3/fid_186.csv
+log_reg / optical: 14 acquisitions -> nrt_scores/optical_log_reg_v3/fid_186.csv
+rf / joint: 10 acquisitions -> nrt_scores/joint_rf_v3/fid_186.csv
+rf / optical: 14 acquisitions -> nrt_scores/optical_rf_v3/fid_186.csv
+End: dim. 09 août 2026 13:56:35 CEST
