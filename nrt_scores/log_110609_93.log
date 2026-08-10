@@ -1,0 +1,4 @@
+Node: sn5 | FID: 293 | log_reg rf | v3 | Start: lun. 10 août 2026 14:12:18 CEST
+log_reg / joint: 3 acquisitions -> nrt_scores/joint_log_reg_v3/fid_293.csv
+rf / joint: 3 acquisitions -> nrt_scores/joint_rf_v3/fid_293.csv
+End: lun. 10 août 2026 14:12:26 CEST

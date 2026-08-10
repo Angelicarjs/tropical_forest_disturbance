@@ -1,0 +1,4 @@
+Node: sn5 | FID: 356 | log_reg rf | v3 | Start: lun. 10 août 2026 14:12:48 CEST
+log_reg / joint: 9 acquisitions -> nrt_scores/joint_log_reg_v3/fid_356.csv
+rf / joint: 9 acquisitions -> nrt_scores/joint_rf_v3/fid_356.csv
+End: lun. 10 août 2026 14:12:57 CEST

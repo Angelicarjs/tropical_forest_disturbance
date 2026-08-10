@@ -1,0 +1,4 @@
+Node: sn4 | FID: 387 | log_reg rf | v3 | Start: lun. 10 août 2026 14:13:07 CEST
+log_reg / joint: 12 acquisitions -> nrt_scores/joint_log_reg_v3/fid_387.csv
+rf / joint: 12 acquisitions -> nrt_scores/joint_rf_v3/fid_387.csv
+End: lun. 10 août 2026 14:13:15 CEST

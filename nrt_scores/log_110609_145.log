@@ -1,0 +1,4 @@
+Node: sn2 | FID: 382 | log_reg rf | v3 | Start: lun. 10 août 2026 14:13:05 CEST
+log_reg / joint: 9 acquisitions -> nrt_scores/joint_log_reg_v3/fid_382.csv
+rf / joint: 9 acquisitions -> nrt_scores/joint_rf_v3/fid_382.csv
+End: lun. 10 août 2026 14:14:17 CEST
