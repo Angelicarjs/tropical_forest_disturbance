@@ -29,6 +29,7 @@ from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
 import matplotlib.gridspec as gridspec
 
+from obs_date import obs_date
 from make_embeddings import (
     embed_image,
     embed_image_joint,
@@ -72,7 +73,10 @@ def _by_s1_date(p: str) -> str:
 
 
 def _by_date_any(p: str) -> str:
-    return re.search(r"(\d{8})T", p).group(1)
+    """Date of an observation, joint pairs included. See obs_date.py: a pair is
+    dated by the later of its two acquisitions, and the same helper is used by
+    the near real time analysis so both date an observation identically."""
+    return obs_date(p)
 
 
 def _by_win(p: str) -> str:

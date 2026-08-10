@@ -35,6 +35,7 @@ import rasterio
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
 
+from obs_date import obs_date
 from rand_forest import majority_downsample
 from seg_dataset import CLASS_TO_ID
 
@@ -139,7 +140,7 @@ def fid_curve(fid, clf, polys, emb_root, cls_id=None, version=DEFAULT_VERSION):
         emb = np.load(npy)
         proba = clf.predict_proba(emb.reshape(-1, emb.shape[-1])[inside])
         # Sums, not means: tiles hold unequal token counts and are pooled below.
-        row = {"date": re.search(r"(\d{8})T", img_dir).group(1),
+        row = {"date": obs_date(img_dir),
                "win": win,
                "tile": tile,
                "n_tok": int(inside.sum()),
@@ -192,7 +193,7 @@ def build_mosaics(fid, clf, polys, emb_root, version=DEFAULT_VERSION):
         if not admitted(img_dir, s2_ok, s1_ok):
             continue                               # rejected by the cloud filter
         s2_id = img_dir.split("__")[0]             # joint dirs are "<s2id>__<s1id>"
-        date = re.search(r"(\d{8})T", img_dir).group(1)
+        date = obs_date(img_dir)
 
         f = frames.setdefault(date, {
             "win": win,
