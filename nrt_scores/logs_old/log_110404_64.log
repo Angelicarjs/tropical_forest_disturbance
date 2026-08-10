@@ -1,6 +1,0 @@
-Node: sn4 | FID: 224 | log_reg rf | v3 | Start: dim. 09 août 2026 13:56:46 CEST
-[skip] log_reg / joint: no admitted acquisition
-log_reg / optical: 1 acquisitions -> nrt_scores/optical_log_reg_v3/fid_224.csv
-[skip] rf / joint: no admitted acquisition
-rf / optical: 1 acquisitions -> nrt_scores/optical_rf_v3/fid_224.csv
-End: dim. 09 août 2026 13:56:52 CEST

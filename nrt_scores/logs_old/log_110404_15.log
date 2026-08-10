@@ -1,6 +1,0 @@
-Node: sn6 | FID: 131 | log_reg rf | v3 | Start: dim. 09 août 2026 13:55:22 CEST
-log_reg / joint: 8 acquisitions -> nrt_scores/joint_log_reg_v3/fid_131.csv
-log_reg / optical: 12 acquisitions -> nrt_scores/optical_log_reg_v3/fid_131.csv
-rf / joint: 8 acquisitions -> nrt_scores/joint_rf_v3/fid_131.csv
-rf / optical: 12 acquisitions -> nrt_scores/optical_rf_v3/fid_131.csv
-End: dim. 09 août 2026 13:55:47 CEST

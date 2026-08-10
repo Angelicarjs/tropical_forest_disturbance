@@ -41,6 +41,10 @@ def main():
                     help=f"any of {MODEL_NAMES}, or 'all'")
     ap.add_argument("--version", default=DEFAULT_VERSION, choices=["1", "2", "3"],
                     help=f"cloud filter (default: {DEFAULT_VERSION}, the strictest)")
+    ap.add_argument("--tag", default="",
+                    help="suffix for the output folder, e.g. 'test'. Keeps the scores "
+                         "of one split from landing next to those of another, which "
+                         "would silently invalidate a threshold chosen on the first")
     args = ap.parse_args()
 
     modes = list(MODES) if "all" in args.mode else args.mode
@@ -86,7 +90,8 @@ def main():
             # closest to it, where the label is least trustworthy.
             curve["view_date"] = view
             curve["days"] = (curve["date"] - view).dt.days
-            d = os.path.join(OUT, f"{mode}_{model}_v{args.version}")
+            name = f"{mode}_{model}_v{args.version}"
+            d = os.path.join(OUT, f"{name}_{args.tag}" if args.tag else name)
             os.makedirs(d, exist_ok=True)
             dest = os.path.join(d, f"fid_{args.fid}.csv")
             curve.to_csv(dest, index=False)

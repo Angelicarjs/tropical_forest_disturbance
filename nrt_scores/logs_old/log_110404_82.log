@@ -1,6 +1,0 @@
-Node: sn4 | FID: 27 | log_reg rf | v3 | Start: dim. 09 août 2026 13:57:21 CEST
-log_reg / joint: 12 acquisitions -> nrt_scores/joint_log_reg_v3/fid_27.csv
-log_reg / optical: 20 acquisitions -> nrt_scores/optical_log_reg_v3/fid_27.csv
-rf / joint: 12 acquisitions -> nrt_scores/joint_rf_v3/fid_27.csv
-rf / optical: 20 acquisitions -> nrt_scores/optical_rf_v3/fid_27.csv
-End: dim. 09 août 2026 13:57:44 CEST

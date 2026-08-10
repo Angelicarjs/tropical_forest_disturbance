@@ -1,6 +1,0 @@
-Node: sw2 | FID: 286 | log_reg rf | v3 | Start: dim. 09 août 2026 13:57:47 CEST
-log_reg / joint: 4 acquisitions -> nrt_scores/joint_log_reg_v3/fid_286.csv
-log_reg / optical: 5 acquisitions -> nrt_scores/optical_log_reg_v3/fid_286.csv
-rf / joint: 4 acquisitions -> nrt_scores/joint_rf_v3/fid_286.csv
-rf / optical: 5 acquisitions -> nrt_scores/optical_rf_v3/fid_286.csv
-End: dim. 09 août 2026 13:58:03 CEST

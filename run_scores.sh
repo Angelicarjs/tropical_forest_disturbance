@@ -16,7 +16,7 @@
 #   ./run_scores.sh                        # trainval, multiclass modes, both models
 #   MODEL=log_reg ./run_scores.sh          # only the linear probe
 #   MODE=all ./run_scores.sh               # add the binary label spaces
-#   SPLIT=splits/split_test_fids.txt ./run_scores.sh
+#   SPLIT=splits/split_test_fids.txt TAG=test ./run_scores.sh
 #   THROTTLE=10 ./run_scores.sh            # at most 10 tasks at a time
 #
 # MODE and MODEL are passed unquoted on purpose: each accepts several values.
@@ -25,6 +25,7 @@ MODE=${MODE:-"joint optical"}
 MODEL=${MODEL:-"log_reg rf"}
 VERSION=${VERSION:-3}
 SPLIT=${SPLIT:-splits/split_trainval_fids.txt}
+TAG=${TAG:-}          # suffix for the output folder; set TAG=test with the test split
 
 if [ -z "$SLURM_JOB_ID" ]; then                 # login node: submit, do not compute
     mapfile -t FIDS < <(grep -Eo '[0-9]+' "$SPLIT")
@@ -34,9 +35,9 @@ if [ -z "$SLURM_JOB_ID" ]; then                 # login node: submit, do not com
     mkdir -p nrt_scores                         # slurm opens the log before the task runs
     RANGE="0-$((${#FIDS[@]} - 1))${THROTTLE:+%$THROTTLE}"
     echo "submitting ${#FIDS[@]} FIDs from $SPLIT as array $RANGE"
-    echo "  mode=$MODE model=$MODEL cloud filter=v$VERSION"
+    echo "  mode=$MODE model=$MODEL cloud filter=v$VERSION tag=${TAG:-none}"
     exec sbatch --array="$RANGE" \
-         --export=ALL,MODE="$MODE",MODEL="$MODEL",VERSION="$VERSION" \
+         --export=ALL,MODE="$MODE",MODEL="$MODEL",VERSION="$VERSION",TAG="$TAG" \
          "$0" "${FIDS[@]}"
 fi
 
@@ -57,5 +58,5 @@ export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF
 export PYTHONWARNINGS="ignore::FutureWarning"
 
 echo "Node: $(hostname) | FID: $FID | $MODEL | v$VERSION | Start: $(date)"
-python nrt_scores.py --fid "$FID" --mode $MODE --model $MODEL --version "$VERSION"
+python nrt_scores.py --fid "$FID" --mode $MODE --model $MODEL --version "$VERSION" --tag "$TAG"
 echo "End: $(date)"

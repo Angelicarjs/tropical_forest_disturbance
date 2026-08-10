@@ -1,2 +1,0 @@
-date,win,n_tok,p_sum,n_nonforest,n_tiles,pc_sum,p_dist,p_class,fid,mode,model,view_date,days
-2023-04-30,aft,97,91.292,96,4,76.871,0.9411546391752578,0.7924845360824742,150,joint,rf,2023-04-13,17

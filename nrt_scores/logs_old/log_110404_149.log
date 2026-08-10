@@ -1,6 +1,0 @@
-Node: sn5 | FID: 40 | log_reg rf | v3 | Start: dim. 09 août 2026 13:59:17 CEST
-log_reg / joint: 11 acquisitions -> nrt_scores/joint_log_reg_v3/fid_40.csv
-log_reg / optical: 16 acquisitions -> nrt_scores/optical_log_reg_v3/fid_40.csv
-rf / joint: 11 acquisitions -> nrt_scores/joint_rf_v3/fid_40.csv
-rf / optical: 16 acquisitions -> nrt_scores/optical_rf_v3/fid_40.csv
-End: dim. 09 août 2026 13:59:58 CEST
