@@ -28,10 +28,12 @@ import pandas as pd
 SCORES = "nrt_scores"
 
 
-def load(mode, model, version, split_file):
-    files = sorted(glob.glob(f"{SCORES}/{mode}_{model}_v{version}/fid_*.csv"))
+def load(mode, model, version, split_file, tag=""):
+    name = f"{mode}_{model}_v{version}"
+    folder = f"{name}_{tag}" if tag else name
+    files = sorted(glob.glob(f"{SCORES}/{folder}/fid_*.csv"))
     if not files:
-        raise SystemExit(f"no scores in {SCORES}/{mode}_{model}_v{version}/")
+        raise SystemExit(f"no scores in {SCORES}/{folder}/")
     d = pd.concat(map(pd.read_csv, files), ignore_index=True)
     if split_file:
         import re
@@ -65,13 +67,15 @@ def main():
     ap.add_argument("--confirm-days", type=int, default=90)
     ap.add_argument("--split", default="splits/split_test_fids.txt",
                     help="restrict to these polygons; empty string for all")
+    ap.add_argument("--tag", default="test",
+                    help="suffix of the score folders, as passed to nrt_scores.py")
     ap.add_argument("--out", default=".")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
     summary = []
     for mode in args.mode:
-        d = load(mode, args.model, args.version, args.split)
+        d = load(mode, args.model, args.version, args.split, args.tag)
         rows = []
         for fid, g in d.groupby("fid"):
             view = pd.to_datetime(g.view_date.iloc[0])
