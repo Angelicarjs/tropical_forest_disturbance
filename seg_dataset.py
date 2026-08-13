@@ -144,7 +144,7 @@ if __name__ == "__main__":
     ds = DisturbanceSegDataset(
         embeddings_root="embeddings",
         tiles_root=os.path.expanduser("~/thesis_tiles_120px"),
-        shp_path="data_shp/label_polygons.shp",
+        shp_path="data/data_shp/label_polygons.shp",
     )
     print(f"samples (evt+aft): {len(ds)}")
     x, y = ds[7]

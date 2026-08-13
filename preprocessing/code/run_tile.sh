@@ -10,7 +10,8 @@ source /share/common/anaconda/etc/profile.d/conda.sh
 conda activate croma_viz
 
 cd /share/castor/home/e2406749/tropical_forest_disturbance
+export PYTHONPATH="$PWD"   # shared modules live at the repo root
 
 echo "Nodo: $(hostname) | Inicio: $(date)"
-python tile_pipeline.py --sample-pct 10 --tile-size 224 --workers 6 --resume --products s2_l2a
+python preprocessing/code/tile_pipeline.py --sample-pct 10 --tile-size 224 --workers 6 --resume --products s2_l2a
 echo "Fin: $(date)"

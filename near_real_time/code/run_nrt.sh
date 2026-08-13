@@ -40,11 +40,12 @@ conda activate croma_viz
 
 cd /share/castor/home/e2406749/tropical_forest_disturbance
 
+export PYTHONPATH="$PWD"   # shared modules (seg_dataset, token_pipeline, obs_date...) live at the repo root
 export PYTHONUNBUFFERED=1
 export MPLBACKEND=Agg   # matplotlib without GUI
 export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF
 export PYTHONWARNINGS="ignore::FutureWarning"
 
 echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | FID: $FID | v$VERSION | Start: $(date)"
-python nrt_fid.py --fid "$FID" --mode all --model all --version "$VERSION" --save results_nrt
+python near_real_time/code/nrt_fid.py --fid "$FID" --mode all --model all --version "$VERSION" --save results_nrt
 echo "End: $(date)"

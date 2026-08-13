@@ -53,10 +53,11 @@ conda activate croma_viz
 
 cd /share/castor/home/e2406749/tropical_forest_disturbance
 
+export PYTHONPATH="$PWD"   # shared modules (seg_dataset, token_pipeline, obs_date...) live at the repo root
 export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF
 export PYTHONWARNINGS="ignore::FutureWarning"
 
 echo "Node: $(hostname) | FID: $FID | $MODEL | v$VERSION | Start: $(date)"
-python nrt_scores.py --fid "$FID" --mode $MODE --model $MODEL --version "$VERSION" --tag "$TAG"
+python near_real_time/code/nrt_scores.py --fid "$FID" --mode $MODE --model $MODEL --version "$VERSION" --tag "$TAG"
 echo "End: $(date)"

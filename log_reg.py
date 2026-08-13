@@ -1,7 +1,7 @@
 """
 Logistic Regression baseline on the CROMA joint embeddings (per-token).
 
-Same purpose and SAME data as rand_forest.py: it reuses the exact split 
+Same purpose and SAME data as token_pipeline.py: it reuses the exact split 
 and the exact FID draws of the learning curve, so the Logistic
 Regression and the Random Forest are comparable.
 
@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegressionCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
-from rand_forest import signal, training_size_sensitivity
+from token_pipeline import signal, training_size_sensitivity
 
 #tunning C
 def make_lr():
@@ -39,9 +39,9 @@ def make_lr():
 if __name__ == "__main__":
     signal("embeddings",
            os.path.expanduser("~/thesis_tiles_120px"),
-           "data_shp/label_polygons.shp",
+           "data/data_shp/label_polygons.shp",
            make_model=make_lr, model_name="LogisticRegression")
     training_size_sensitivity("embeddings",
                    os.path.expanduser("~/thesis_tiles_120px"),
-                   "data_shp/label_polygons.shp",
+                   "data/data_shp/label_polygons.shp",
                    make_model=make_lr, model_name="LogisticRegression")

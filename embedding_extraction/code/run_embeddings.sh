@@ -17,10 +17,11 @@ source /share/common/anaconda/etc/profile.d/conda.sh
 conda activate croma_viz
 
 cd "$PROJ"
+export PYTHONPATH="$PWD"   # shared modules live at the repo root
 
 echo "Nodo: $(hostname) | GPU: $CUDA_VISIBLE_DEVICES | Inicio: $(date)"
 
-python embed_all.py \
+python embedding_extraction/code/embed_all.py \
     --tiles-root "$TILES" \
     --csv-dir "$CSV" \
     --modality "optical" \

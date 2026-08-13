@@ -369,7 +369,7 @@ if __name__ == "__main__":
     integrity("embeddings")
     signal("embeddings",
            os.path.expanduser("~/thesis_tiles_120px"),
-           "data_shp/label_polygons.shp")
+           "data/data_shp/label_polygons.shp")
     training_size_sensitivity("embeddings",
                               os.path.expanduser("~/thesis_tiles_120px"),
-                              "data_shp/label_polygons.shp")
+                              "data/data_shp/label_polygons.shp")

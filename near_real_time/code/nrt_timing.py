@@ -6,8 +6,8 @@ threshold, and confirm the flag when a second acquisition within `confirm_days`
 also reaches it. The date reported is that of the first flagged acquisition, not
 of the confirming one, so confirmation costs confidence but not timeliness.
 
-The threshold comes from the training split (nrt_threshold.ipynb or nrt_roc.py)
-and is passed in, never recomputed here.
+The threshold comes from the training split, chosen in nrt_threshold.ipynb, and is
+passed in here, never recomputed.
 
 Delay is measured against VIEW_DATE, the date DETER recorded the event. A
 negative delay means the alert precedes it. VIEW_DATE is a detection date and
@@ -66,7 +66,7 @@ def main():
     ap.add_argument("--model", default="log_reg")
     ap.add_argument("--version", default="3")
     ap.add_argument("--confirm-days", type=int, default=90)
-    ap.add_argument("--split", default="splits/split_test_fids.txt",
+    ap.add_argument("--split", default="data/splits/split_test_fids.txt",
                     help="restrict to these polygons; empty string for all")
     ap.add_argument("--tag", default="test",
                     help="suffix of the score folders, as passed to nrt_scores.py")

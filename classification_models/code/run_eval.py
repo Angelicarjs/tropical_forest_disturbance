@@ -19,7 +19,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, classification_report
 
 from seg_dataset import DisturbanceSegDataset, common_tile_keys
-from rand_forest import (FOREST_ROOT, ID_TO_CLASS, load_or_make_split,
+from token_pipeline import (FOREST_ROOT, ID_TO_CLASS, load_or_make_split,
                          build_pixel_dataset_forest, balance_classes, make_rf,
                          training_size_sensitivity)
 from log_reg import make_lr
@@ -35,7 +35,7 @@ def main():
     ap.add_argument("--embed-kind", default="joint",
                     help="embedding modality subdir: joint | s2_l2a | s1_grd")
     ap.add_argument("--tiles-root", default=os.path.expanduser("~/thesis_tiles_120px"))
-    ap.add_argument("--shp", default="data_shp/label_polygons.shp")
+    ap.add_argument("--shp", default="data/data_shp/label_polygons.shp")
     ap.add_argument("--forest-root", default=FOREST_ROOT)
     ap.add_argument("--n-repeats", type=int, default=3,
                     help="repeats for the training-size sensitivity analysis")

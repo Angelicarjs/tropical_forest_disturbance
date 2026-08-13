@@ -17,7 +17,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 
 from seg_dataset import NUM_CLASSES
-from rand_forest import ID_TO_CLASS, majority_downsample
+from token_pipeline import ID_TO_CLASS, majority_downsample
 
 # fixed color per model class id (0..6); 0 = forest for the MODEL
 CLASS_COLORS = {
@@ -232,7 +232,7 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
 
 
 def plot_training_size_sensitivity(rows, model_name, out=None, show=False):
-    """Plot the rows returned by rand_forest.training_size_sensitivity()."""
+    """Plot the rows returned by token_pipeline.training_size_sensitivity()."""
     x = [r["train_tokens_mean"] for r in rows]
     fig, ax = plt.subplots(figsize=(9, 6))
     for key, lbl in [("acc", "accuracy"),

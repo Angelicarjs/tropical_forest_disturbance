@@ -36,14 +36,14 @@ from rasterio.features import rasterize
 from rasterio.transform import from_origin
 
 from obs_date import obs_date
-from rand_forest import majority_downsample
+from token_pipeline import majority_downsample
 from seg_dataset import CLASS_TO_ID
 
 TILES = "/share/castor/home/e2406749/thesis_tiles_120px"
-SHP = "data_shp/label_polygons.shp"
+SHP = "data/data_shp/label_polygons.shp"
 # Tiles on disk are the union of the three cloud filters, so every curve has to
 # be restricted to one of them. v3 is the strictest (Cloud Score+ with dilation).
-CSV_TEMPLATE = "data_csv/v{version}_images_s2_s1.csv"
+CSV_TEMPLATE = "data/data_csv/v{version}_images_s2_s1.csv"
 DEFAULT_VERSION = "3"
 
 # One entry per (embedding modality, label space). `res` is the --results-root

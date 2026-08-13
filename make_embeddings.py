@@ -453,7 +453,7 @@ def iter_joint_pairs_from_csv(csv_path, tiles_root, max_gap_days=7,
       3. Greedy assignment: pick a pair if neither side is already used in this
          (fid, window). Each s1 image_id and each s2 image_id is consumed at most once.
 
-    csv_path: e.g. 'data_csv/v3_images_s2_s1.csv'
+    csv_path: e.g. 'data/data_csv/v3_images_s2_s1.csv'
     tiles_root: path to .../tiles_120px/ (parent of s2_l2a/ and s1_grd/)
     require_tiles_exist: skip pairs whose image_id folder is not on disk.
     """

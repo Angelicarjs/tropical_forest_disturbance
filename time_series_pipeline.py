@@ -40,8 +40,8 @@ from make_embeddings import (
 
 TILES_ROOT = "/share/castor/home/e2406749/thesis_tiles_120px"
 EMB_ROOT = "embeddings"
-SHP_PATH = "data_shp/label_polygons.shp"
-CSV_TEMPLATE = "data_csv/{version}_images_s2_s1.csv"
+SHP_PATH = "data/data_shp/label_polygons.shp"
+CSV_TEMPLATE = "data/data_csv/{version}_images_s2_s1.csv"
 _VERSION = "v3"  # current cloud-filter version; set by run(), shown in plot titles
 _VERSIONS = ("v1", "v2", "v3")  # all cloud-filter versions (for the common PCA base)
 
