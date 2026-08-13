@@ -1,6 +1,0 @@
-Node: sn6 | FID: 346 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:57:36 CEST
-log_reg / joint: 10 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_346.csv
-log_reg / optical: 19 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_346.csv
-rf / joint: 10 acquisitions -> nrt_scores/joint_rf_v3_test/fid_346.csv
-rf / optical: 19 acquisitions -> nrt_scores/optical_rf_v3_test/fid_346.csv
-End: jeu. 13 août 2026 13:57:49 CEST

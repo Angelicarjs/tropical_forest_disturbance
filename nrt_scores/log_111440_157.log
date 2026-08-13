@@ -1,6 +1,0 @@
-Node: sn6 | FID: 64 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:58:02 CEST
-log_reg / joint: 14 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_64.csv
-log_reg / optical: 19 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_64.csv
-rf / joint: 14 acquisitions -> nrt_scores/joint_rf_v3_test/fid_64.csv
-rf / optical: 19 acquisitions -> nrt_scores/optical_rf_v3_test/fid_64.csv
-End: jeu. 13 août 2026 13:58:20 CEST

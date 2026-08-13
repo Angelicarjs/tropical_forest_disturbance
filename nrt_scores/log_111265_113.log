@@ -1,6 +1,0 @@
-Node: sn5 | FID: 325 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:49:52 CEST
-log_reg / joint: 8 acquisitions -> nrt_scores/joint_log_reg_v3_trainval/fid_325.csv
-log_reg / optical: 14 acquisitions -> nrt_scores/optical_log_reg_v3_trainval/fid_325.csv
-rf / joint: 8 acquisitions -> nrt_scores/joint_rf_v3_trainval/fid_325.csv
-rf / optical: 14 acquisitions -> nrt_scores/optical_rf_v3_trainval/fid_325.csv
-End: jeu. 13 août 2026 13:50:08 CEST

@@ -1,0 +1,34 @@
+Node: sn2 | CPUs: 6 | Start: jeu. 09 juil. 2026 21:00:46 CEST
+[forest] dropped background, added 15687 forest px (evt+aft)
+split loaded from splits/  (test=171 | trainval=175 FIDs)
+[data] train 13010 tok | test 26046 tok (full)
+[maps] FIDs: ['3', '4', '5', '9']
+[RandomForest] training...
+[RandomForest] learning curve...
+split loaded from splits/  (test=171 | trainval=175 FIDs)
+
+[C] learning curve | RandomForest | max FIDs/class=122 | N schedule=[2, 4, 8, 16, 32, 64, 122] | repeats=3
+     N/class train_tok            acc        f1_dist         f1_all     C_med
+           2      8433   0.580±0.027   0.208±0.013   0.320±0.011         -
+           4     11987   0.641±0.007   0.340±0.011   0.433±0.009         -
+           8     21502   0.740±0.022   0.424±0.020   0.506±0.017         -
+          16     27554   0.750±0.005   0.452±0.007   0.530±0.006         -
+          32     29109   0.784±0.002   0.466±0.003   0.542±0.002         -
+          64     32056   0.802±0.001   0.420±0.003   0.503±0.002         -
+         122     38267   0.804±0.000   0.385±0.000   0.473±0.000         -
+[RandomForest] done -> results/rf/
+[LogisticRegression] training...
+[LogisticRegression] learning curve...
+split loaded from splits/  (test=171 | trainval=175 FIDs)
+
+[C] learning curve | LogisticRegression | max FIDs/class=122 | N schedule=[2, 4, 8, 16, 32, 64, 122] | repeats=3
+     N/class train_tok            acc        f1_dist         f1_all     C_med
+           2      8433   0.657±0.044   0.415±0.046   0.498±0.039       0.1
+           4     11987   0.691±0.020   0.464±0.013   0.541±0.011    0.0316
+           8     21502   0.736±0.005   0.521±0.014   0.589±0.012       0.1
+          16     27554   0.754±0.005   0.570±0.004   0.631±0.003       0.1
+          32     29109   0.775±0.006   0.594±0.013   0.652±0.011    0.0316
+          64     32056   0.791±0.004   0.606±0.006   0.662±0.005       0.1
+         122     38267   0.803±0.000   0.615±0.000   0.670±0.000       0.1
+[LogisticRegression] done -> results/log_reg/
+End: jeu. 09 juil. 2026 22:41:06 CEST

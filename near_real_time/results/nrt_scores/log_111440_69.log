@@ -1,0 +1,6 @@
+Node: sn4 | FID: 232 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:57:06 CEST
+log_reg / joint: 1 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_232.csv
+log_reg / optical: 2 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_232.csv
+rf / joint: 1 acquisitions -> nrt_scores/joint_rf_v3_test/fid_232.csv
+rf / optical: 2 acquisitions -> nrt_scores/optical_rf_v3_test/fid_232.csv
+End: jeu. 13 août 2026 13:57:14 CEST

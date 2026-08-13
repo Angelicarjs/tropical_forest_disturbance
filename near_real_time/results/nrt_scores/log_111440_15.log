@@ -1,0 +1,6 @@
+Node: sn7 | FID: 127 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:56:39 CEST
+log_reg / joint: 7 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_127.csv
+log_reg / optical: 10 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_127.csv
+rf / joint: 7 acquisitions -> nrt_scores/joint_rf_v3_test/fid_127.csv
+rf / optical: 10 acquisitions -> nrt_scores/optical_rf_v3_test/fid_127.csv
+End: jeu. 13 août 2026 13:56:49 CEST

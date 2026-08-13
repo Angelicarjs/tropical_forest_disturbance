@@ -1,6 +1,0 @@
-Node: sn3 | FID: 350 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:50:02 CEST
-log_reg / joint: 12 acquisitions -> nrt_scores/joint_log_reg_v3_trainval/fid_350.csv
-log_reg / optical: 20 acquisitions -> nrt_scores/optical_log_reg_v3_trainval/fid_350.csv
-rf / joint: 12 acquisitions -> nrt_scores/joint_rf_v3_trainval/fid_350.csv
-rf / optical: 20 acquisitions -> nrt_scores/optical_rf_v3_trainval/fid_350.csv
-End: jeu. 13 août 2026 13:50:38 CEST

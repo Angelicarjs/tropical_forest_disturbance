@@ -1,6 +1,0 @@
-Node: sn6 | FID: 193 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:57:01 CEST
-log_reg / joint: 10 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_193.csv
-log_reg / optical: 15 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_193.csv
-rf / joint: 10 acquisitions -> nrt_scores/joint_rf_v3_test/fid_193.csv
-rf / optical: 15 acquisitions -> nrt_scores/optical_rf_v3_test/fid_193.csv
-End: jeu. 13 août 2026 13:57:16 CEST

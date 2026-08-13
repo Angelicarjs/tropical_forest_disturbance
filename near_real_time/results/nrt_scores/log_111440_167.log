@@ -1,0 +1,6 @@
+Node: sn3 | FID: 9 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:58:11 CEST
+log_reg / joint: 11 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_9.csv
+log_reg / optical: 18 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_9.csv
+rf / joint: 11 acquisitions -> nrt_scores/joint_rf_v3_test/fid_9.csv
+rf / optical: 18 acquisitions -> nrt_scores/optical_rf_v3_test/fid_9.csv
+End: jeu. 13 août 2026 13:58:44 CEST

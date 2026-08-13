@@ -1,0 +1,6 @@
+Node: sn5 | FID: 156 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:48:52 CEST
+log_reg / joint: 2 acquisitions -> nrt_scores/joint_log_reg_v3_trainval/fid_156.csv
+log_reg / optical: 3 acquisitions -> nrt_scores/optical_log_reg_v3_trainval/fid_156.csv
+rf / joint: 2 acquisitions -> nrt_scores/joint_rf_v3_trainval/fid_156.csv
+rf / optical: 3 acquisitions -> nrt_scores/optical_rf_v3_trainval/fid_156.csv
+End: jeu. 13 août 2026 13:49:02 CEST

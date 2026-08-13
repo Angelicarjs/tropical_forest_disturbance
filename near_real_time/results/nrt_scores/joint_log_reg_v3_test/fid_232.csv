@@ -1,0 +1,2 @@
+date,win,s2_id,n_tok,p_sum,n_nonforest,n_tiles,pc_sum,p_dist,p_class,fid,mode,model,view_date,days
+2023-06-14,aft,20230609T142719_20230609T142938_T20LNR,63,42.48043586723488,48,4,38.4532891336878,0.6742926328132521,0.6103696687886951,232,joint,log_reg,2023-05-27,18

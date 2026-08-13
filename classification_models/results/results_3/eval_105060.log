@@ -1,0 +1,67 @@
+Node: sn1 | CPUs: 6 | Start: jeu. 16 juil. 2026 14:33:59 CEST
+[forest] dropped background, added 15687 forest px (evt+aft)
+split loaded from splits/  (test=171 | trainval=175 FIDs)
+[data] train 13010 tok | test 26046 tok (full)
+[maps] FIDs: ['83', '389', '25', '3']
+[RandomForest] training...
+
+[RandomForest] accuracy (test): 0.792
+                              precision    recall  f1-score   support
+
+                      forest       1.00      1.00      1.00      7695
+         Clear-cut bare soil       0.88      0.90      0.89      8358
+                   Fire scar       0.64      0.23      0.34       835
+                 Degradation       0.33      0.27      0.30      2731
+Disorderly Selective logging       0.66      0.77      0.71      4832
+        Clear-cut vegetation       0.77      0.31      0.44       266
+ Geometric Selective logging       0.47      0.50      0.48      1329
+
+                    accuracy                           0.79     26046
+                   macro avg       0.68      0.57      0.59     26046
+                weighted avg       0.79      0.79      0.78     26046
+
+[RandomForest] training-size sensitivity...
+split loaded from splits/  (test=171 | trainval=175 FIDs)
+
+[C] training-size sensitivity | RandomForest | max FIDs/class=122 | N schedule=[2, 4, 8, 16, 32, 64, 122] | repeats=3
+     N/class train_tok            acc      prec_dist    prec_dist_w        f1_dist         f1_all     C_med
+           2      8433   0.580±0.027   0.342±0.039   0.537±0.114   0.208±0.013   0.320±0.011         -
+           4     11987   0.641±0.007   0.437±0.017   0.643±0.003   0.340±0.011   0.433±0.009         -
+           8     21502   0.740±0.022   0.554±0.033   0.661±0.018   0.424±0.020   0.506±0.017         -
+          16     27554   0.750±0.005   0.641±0.004   0.695±0.002   0.452±0.007   0.530±0.006         -
+          32     29109   0.784±0.002   0.656±0.002   0.694±0.001   0.466±0.003   0.542±0.002         -
+          64     32056   0.802±0.001   0.700±0.010   0.694±0.003   0.420±0.003   0.503±0.002         -
+         122     38267   0.804±0.000   0.705±0.000   0.689±0.000   0.385±0.000   0.473±0.000         -
+[RandomForest] done -> results/rf/
+[LogisticRegression] training...
+
+[LogisticRegression] accuracy (test): 0.792
+                              precision    recall  f1-score   support
+
+                      forest       1.00      1.00      1.00      7695
+         Clear-cut bare soil       0.92      0.86      0.89      8358
+                   Fire scar       0.48      0.76      0.59       835
+                 Degradation       0.32      0.31      0.32      2731
+Disorderly Selective logging       0.67      0.69      0.68      4832
+        Clear-cut vegetation       0.61      0.73      0.66       266
+ Geometric Selective logging       0.58      0.55      0.56      1329
+
+                    accuracy                           0.79     26046
+                   macro avg       0.65      0.70      0.67     26046
+                weighted avg       0.80      0.79      0.79     26046
+
+[LogisticRegression] selected C: 0.0316228
+[LogisticRegression] training-size sensitivity...
+split loaded from splits/  (test=171 | trainval=175 FIDs)
+
+[C] training-size sensitivity | LogisticRegression | max FIDs/class=122 | N schedule=[2, 4, 8, 16, 32, 64, 122] | repeats=3
+     N/class train_tok            acc      prec_dist    prec_dist_w        f1_dist         f1_all     C_med
+           2      8433   0.657±0.044   0.438±0.036   0.675±0.023   0.415±0.046   0.498±0.039       0.1
+           4     11987   0.691±0.020   0.461±0.015   0.680±0.020   0.464±0.013   0.541±0.011    0.0316
+           8     21502   0.736±0.005   0.496±0.015   0.686±0.001   0.521±0.014   0.589±0.012       0.1
+          16     27554   0.754±0.005   0.546±0.003   0.699±0.008   0.570±0.004   0.631±0.003       0.1
+          32     29109   0.775±0.006   0.569±0.018   0.706±0.008   0.594±0.013   0.652±0.011    0.0316
+          64     32056   0.791±0.004   0.590±0.008   0.707±0.006   0.606±0.006   0.662±0.005       0.1
+         122     38267   0.803±0.000   0.608±0.000   0.705±0.000   0.615±0.000   0.670±0.000       0.1
+[LogisticRegression] done -> results/log_reg/
+End: jeu. 16 juil. 2026 16:06:55 CEST

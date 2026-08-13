@@ -1,6 +1,0 @@
-Node: sn3 | FID: 29 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:49:42 CEST
-log_reg / joint: 10 acquisitions -> nrt_scores/joint_log_reg_v3_trainval/fid_29.csv
-log_reg / optical: 19 acquisitions -> nrt_scores/optical_log_reg_v3_trainval/fid_29.csv
-rf / joint: 10 acquisitions -> nrt_scores/joint_rf_v3_trainval/fid_29.csv
-rf / optical: 19 acquisitions -> nrt_scores/optical_rf_v3_trainval/fid_29.csv
-End: jeu. 13 août 2026 13:50:56 CEST

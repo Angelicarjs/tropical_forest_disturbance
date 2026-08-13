@@ -1,0 +1,6 @@
+Node: sn4 | FID: 181 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:56:56 CEST
+log_reg / joint: 7 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_181.csv
+log_reg / optical: 10 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_181.csv
+rf / joint: 7 acquisitions -> nrt_scores/joint_rf_v3_test/fid_181.csv
+rf / optical: 10 acquisitions -> nrt_scores/optical_rf_v3_test/fid_181.csv
+End: jeu. 13 août 2026 13:57:05 CEST

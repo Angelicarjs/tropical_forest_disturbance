@@ -1,3 +1,0 @@
-mode,model,tau,confirm_days,polygons,confirmed,confirmed_pct,delay_median,delay_q25,delay_q75,before_view_pct
-optical,log_reg,0.972,90,171,58,0.339,-2,-12,3,0.569
-joint,log_reg,0.972,90,171,43,0.251,0,-25,3,0.442
