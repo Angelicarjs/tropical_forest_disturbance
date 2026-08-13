@@ -1,0 +1,6 @@
+Node: sn6 | FID: 290 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:49:41 CEST
+log_reg / joint: 3 acquisitions -> nrt_scores/joint_log_reg_v3_trainval/fid_290.csv
+log_reg / optical: 4 acquisitions -> nrt_scores/optical_log_reg_v3_trainval/fid_290.csv
+rf / joint: 3 acquisitions -> nrt_scores/joint_rf_v3_trainval/fid_290.csv
+rf / optical: 4 acquisitions -> nrt_scores/optical_rf_v3_trainval/fid_290.csv
+End: jeu. 13 août 2026 13:49:51 CEST

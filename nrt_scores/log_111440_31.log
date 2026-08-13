@@ -1,0 +1,6 @@
+Node: sn5 | FID: 161 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:56:40 CEST
+log_reg / joint: 5 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_161.csv
+log_reg / optical: 6 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_161.csv
+rf / joint: 5 acquisitions -> nrt_scores/joint_rf_v3_test/fid_161.csv
+rf / optical: 6 acquisitions -> nrt_scores/optical_rf_v3_test/fid_161.csv
+End: jeu. 13 août 2026 13:56:49 CEST

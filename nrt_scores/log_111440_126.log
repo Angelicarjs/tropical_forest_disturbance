@@ -1,0 +1,6 @@
+Node: sn5 | FID: 354 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:57:39 CEST
+log_reg / joint: 12 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_354.csv
+log_reg / optical: 19 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_354.csv
+rf / joint: 12 acquisitions -> nrt_scores/joint_rf_v3_test/fid_354.csv
+rf / optical: 19 acquisitions -> nrt_scores/optical_rf_v3_test/fid_354.csv
+End: jeu. 13 août 2026 13:57:53 CEST

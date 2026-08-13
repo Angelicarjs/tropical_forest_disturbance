@@ -1,0 +1,6 @@
+Node: sn7 | FID: 17 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:56:51 CEST
+log_reg / joint: 10 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_17.csv
+log_reg / optical: 17 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_17.csv
+rf / joint: 10 acquisitions -> nrt_scores/joint_rf_v3_test/fid_17.csv
+rf / optical: 17 acquisitions -> nrt_scores/optical_rf_v3_test/fid_17.csv
+End: jeu. 13 août 2026 13:57:16 CEST

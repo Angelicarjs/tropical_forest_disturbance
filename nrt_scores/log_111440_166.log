@@ -1,0 +1,6 @@
+Node: sn4 | FID: 88 | log_reg rf | v3 | Start: jeu. 13 août 2026 13:58:10 CEST
+log_reg / joint: 12 acquisitions -> nrt_scores/joint_log_reg_v3_test/fid_88.csv
+log_reg / optical: 21 acquisitions -> nrt_scores/optical_log_reg_v3_test/fid_88.csv
+rf / joint: 12 acquisitions -> nrt_scores/joint_rf_v3_test/fid_88.csv
+rf / optical: 21 acquisitions -> nrt_scores/optical_rf_v3_test/fid_88.csv
+End: jeu. 13 août 2026 13:58:26 CEST
