@@ -141,6 +141,13 @@ def fid_curve(fid, clf, polys, emb_root, cls_id=None, version=DEFAULT_VERSION):
         proba = clf.predict_proba(emb.reshape(-1, emb.shape[-1])[inside])
         # Sums, not means: tiles hold unequal token counts and are pooled below.
         row = {"date": obs_date(img_dir),
+               # The Sentinel-2 acquisition behind this observation. A joint dir is
+               # "<s2 id>__<s1 id>", a unimodal one is the id itself, so this is the
+               # key that matches an optical observation with the joint observation
+               # built on the same optical image. Dates cannot do it: a pair is dated
+               # by the later of its two acquisitions (see obs_date), so the same
+               # Sentinel-2 image carries a different date in the two modes.
+               "s2_id": img_dir.split("__")[0],
                "win": win,
                "tile": tile,
                "n_tok": int(inside.sum()),
@@ -157,7 +164,9 @@ def fid_curve(fid, clf, polys, emb_root, cls_id=None, version=DEFAULT_VERSION):
            "n_nonforest": ("n_nonforest", "sum"), "n_tiles": ("tile", "nunique")}
     if cls_id is not None:
         agg["pc_sum"] = ("pc_sum", "sum")
-    out = pd.DataFrame(rows).groupby(["date", "win"], as_index=False).agg(**agg)
+    # s2_id joins the keys so it survives the aggregation. It is constant within an
+    # acquisition, so the grouping is the same as by date and window alone.
+    out = pd.DataFrame(rows).groupby(["date", "win", "s2_id"], as_index=False).agg(**agg)
 
     out["p_dist"] = out.p_sum / out.n_tok          # token-weighted over the polygon
     if cls_id is not None:

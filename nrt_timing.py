@@ -39,7 +39,8 @@ def load(mode, model, version, split_file, tag=""):
         import re
         keep = {int(x) for x in re.findall(r"[0-9]+", open(split_file).read())}
         d = d[d.fid.isin(keep)]
-    d["date"] = pd.to_datetime(d["date"], format="%Y%m%d")
+    # fid_curve converts the date before writing, so the CSV carries it as ISO
+    d["date"] = pd.to_datetime(d["date"])
     return d.sort_values(["fid", "date"])
 
 
@@ -69,13 +70,31 @@ def main():
                     help="restrict to these polygons; empty string for all")
     ap.add_argument("--tag", default="test",
                     help="suffix of the score folders, as passed to nrt_scores.py")
+    ap.add_argument("--match", action="store_true",
+                    help="keep only the acquisitions present in every mode, so the "
+                         "comparison isolates the representation instead of the "
+                         "number of dates each mode has")
     ap.add_argument("--out", default=".")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
+
+    data = {m: load(m, args.model, args.version, args.split, args.tag)
+            for m in args.mode}
+
+    if args.match and len(data) > 1:
+        # Matched on the Sentinel-2 image, not on the date: a joint pair is dated by
+        # the later of its two acquisitions, so the same optical image carries a
+        # different date in the two modes and a join on dates would miss most pairs.
+        shared = set.intersection(*(set(zip(x.fid, x.s2_id)) for x in data.values()))
+        for m, x in data.items():
+            kept = x[[k in shared for k in zip(x.fid, x.s2_id)]]
+            print(f"[{m}] matched: {len(kept)} of {len(x)} acquisitions, "
+                  f"{kept.fid.nunique()} polygons")
+            data[m] = kept
+
     summary = []
-    for mode in args.mode:
-        d = load(mode, args.model, args.version, args.split, args.tag)
+    for mode, d in data.items():
         rows = []
         for fid, g in d.groupby("fid"):
             view = pd.to_datetime(g.view_date.iloc[0])
