@@ -20,12 +20,15 @@ Usage:
 """
 import argparse
 import glob
+from pathlib import Path
 import os
 
 import numpy as np
 import pandas as pd
 
-SCORES = "nrt_scores"
+_REL = Path("near_real_time") / "results" / "nrt_scores"
+SCORES = next((str(r / _REL) for r in (Path.cwd(), *Path.cwd().parents)
+               if (r / _REL).is_dir()), str(_REL))
 
 
 def load(mode, model, version, split_file, tag=""):
