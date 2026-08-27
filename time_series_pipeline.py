@@ -429,8 +429,28 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.tight_layout(); plt.show()
 
+def _common_date_range(fid: int, tile: int, modalities, allowed_s2, allowed_s1,
+                       pad_days: int = 5):
+    """Date limits covering every modality, so panels can share one time axis.
+
+    Each modality is observed on its own dates, so an autoscaled axis puts the
+    reference date at a different horizontal position in every panel. Passing these
+    limits to each panel places it identically in all of them.
+    """
+    dates = []
+    for modality in modalities:
+        dates += [_by_date_any(p)
+                  for p in _paths_for(fid, tile, modality, allowed_s2, allowed_s1)]
+    if not dates:
+        return None
+    d = pd.to_datetime(sorted(dates))
+    pad = pd.Timedelta(days=pad_days)
+    return d.min() - pad, d.max() + pad
+
+
 def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
-                       top_k: int = 5, tok_r: int = None, tok_c: int = None):
+                       top_k: int = 5, tok_r: int = None, tok_c: int = None,
+                       xlim=None):
     """Follow the most variable embedding dimension of one token through time.
 
     The unit is the token, the same one the cosine and the PCA readings follow, so
@@ -470,6 +490,8 @@ def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s
     plt.scatter(dates, series[:, top_dim], c=colors, s=70,
                 edgecolors="black", linewidths=0.5, zorder=3)
     _add_event_line(plt.gca(), _event_date(fid))
+    if xlim is not None:
+        plt.xlim(*xlim)               # shared across modalities, see _common_date_range
     plt.title(f"Dim {top_dim} (std={dim_scores[top_dim]:.3f}) — fid {fid}, tile {tile}, "
               f"{modality}, {unit} — {_VERSION}")
     plt.ylabel(f"embedding value (dim {top_dim})")
