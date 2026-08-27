@@ -430,18 +430,33 @@ def _pca_first_image(fid: int, tile: int, tok_r: int, tok_c: int, modality: str,
     plt.tight_layout(); plt.show()
 
 def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s1,
-                       top_k: int = 5):
+                       top_k: int = 5, tok_r: int = None, tok_c: int = None):
+    """Follow the most variable embedding dimension of one token through time.
+
+    The unit is the token, the same one the cosine and the PCA readings follow, so
+    the three readings describe the same location. Collapsing the whole tile instead
+    would reintroduce the tile level quantity that the mosaic analysis showed to be
+    spatially inconsistent, and on a small polygon the tokens outside it dominate
+    the mean. The tile mean is kept as the fallback for callers that follow no
+    particular token.
+    """
     paths = _paths_for(fid, tile, modality, allowed_s2, allowed_s1)
     if not paths:
         print(f"[{modality}] no embeddings after filter — skipping most-variable-dim")
         return
 
-    cube = np.stack([np.load(p) for p in paths])
-    tile_means = cube.mean(axis=(1, 2))           # (T, 768)
-    dim_scores = tile_means.std(axis=0)           # (768,)
+    cube = np.stack([np.load(p) for p in paths])      # (T, R, C, 768)
+    if tok_r is not None and tok_c is not None:
+        series = cube[:, tok_r, tok_c, :]             # (T, 768)
+        unit = f"token ({tok_r},{tok_c})"
+    else:
+        series = cube.mean(axis=(1, 2))               # (T, 768)
+        unit = "tile mean"
+
+    dim_scores = series.std(axis=0)               # (768,)
     sorted_dims = np.argsort(dim_scores)[::-1]
     top_dim = sorted_dims[0]
-    print(f"[{modality}] cube shape: {cube.shape}")
+    print(f"[{modality}] cube shape: {cube.shape} | unit: {unit}")
     print(f"[{modality}] top dim: {top_dim} (std={dim_scores[top_dim]:.4f})")
     print(f"[{modality}] top {top_k} dims: {sorted_dims[:top_k].tolist()}")
     print(f"[{modality}] top {top_k} scores: {dim_scores[sorted_dims[:top_k]].round(4).tolist()}")
@@ -451,11 +466,12 @@ def _most_variable_dim(fid: int, tile: int, modality: str, allowed_s2, allowed_s
     colors = [WIN_COLORS[w] for w in wins]
 
     plt.figure(figsize=(10, 4))
-    plt.plot(dates, tile_means[:, top_dim], "-", color="gray", alpha=0.5)
-    plt.scatter(dates, tile_means[:, top_dim], c=colors, s=70,
+    plt.plot(dates, series[:, top_dim], "-", color="gray", alpha=0.5)
+    plt.scatter(dates, series[:, top_dim], c=colors, s=70,
                 edgecolors="black", linewidths=0.5, zorder=3)
     _add_event_line(plt.gca(), _event_date(fid))
-    plt.title(f"Dim {top_dim} (std={dim_scores[top_dim]:.3f}) — fid {fid}, tile {tile}, {modality} — {_VERSION}")
+    plt.title(f"Dim {top_dim} (std={dim_scores[top_dim]:.3f}) — fid {fid}, tile {tile}, "
+              f"{modality}, {unit} — {_VERSION}")
     plt.ylabel(f"embedding value (dim {top_dim})")
     plt.xticks(rotation=45); plt.grid(alpha=0.3)
     plt.legend(
@@ -649,7 +665,8 @@ def complete_analysis(fid: int, tile: int, seed: int = 42, version: str = "v3",
     _ndvi_profile(fid, tile, tok_r, tok_c, allowed_s2)
 
     for modality in ("optical", "sar", "joint"):
-        _most_variable_dim(fid, tile, modality, allowed_s2, allowed_s1)
+        _most_variable_dim(fid, tile, modality, allowed_s2, allowed_s1,
+                           tok_r=tok_r, tok_c=tok_c)
         _pca_first_image(fid, tile, tok_r, tok_c, modality, allowed_s2, allowed_s1)
 
     _optical_rgb_grid(fid, tile, allowed_s2)
