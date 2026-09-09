@@ -161,7 +161,7 @@ def _forest_cells(forest_root, fid, tile, windows, grid=15, s2_id=None):
 def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
                   max_tiles_per_fid=4, outline_polygons=True,
                   forest_root="embeddings/joint_forest", show_forest=True,
-                  forest_windows=("evt", "aft")):
+                  forest_windows=("evt", "aft"), row_height=2.7):
     """For each FID: RGB image vs ground-truth vs predicted class grid, one row per tile.
 
     Ground truth uses a dedicated 'background (unlabeled)' color for everything
@@ -179,7 +179,9 @@ def plot_fid_maps(ds, clf, fids, model_name, out=None, show=False,
         print("[maps] no samples for the requested FIDs")
         return
     n = len(rows)
-    fig, axes = plt.subplots(n, 3, figsize=(8.2, 2.7 * n), squeeze=False)
+    # row_height is lowered for manuscript figures, where several rows have to
+    # fit on one page; the default keeps the original size for the eval run.
+    fig, axes = plt.subplots(n, 3, figsize=(8.2, row_height * n), squeeze=False)
     for k, (fid, s) in enumerate(rows):
         emb = np.load(s["npy"])                          # (gh, gw, 768)
         gh, gw, _ = emb.shape
