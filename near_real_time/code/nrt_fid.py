@@ -39,7 +39,9 @@ from obs_date import obs_date
 from token_pipeline import majority_downsample
 from seg_dataset import CLASS_TO_ID
 
-TILES = "/share/castor/home/e2406749/thesis_tiles_120px"
+# The tiles live outside the repository. $HOME/thesis_tiles_120px on the cluster,
+# the same location run_eval.py and run_embeddings.sh assume; override with THESIS_TILES.
+TILES = os.environ.get("THESIS_TILES", os.path.expanduser("~/thesis_tiles_120px"))
 SHP = "data/data_shp/label_polygons.shp"
 # Tiles on disk are the union of the three cloud filters, so every curve has to
 # be restricted to one of them. v3 is the strictest (Cloud Score+ with dilation).
@@ -48,11 +50,12 @@ DEFAULT_VERSION = "3"
 
 # One entry per (embedding modality, label space). `res` is the --results-root
 # the matching run_eval*.sh wrote into, so the model always matches the tokens.
+RESULTS = "classification_models/results"
 MODES = {
-    "joint":          {"emb": "embeddings/joint",  "res": "results",                "binary": False},
-    "joint_binary":   {"emb": "embeddings/joint",  "res": "results_binary",         "binary": True},
-    "optical":        {"emb": "embeddings/s2_l2a", "res": "results_optical",        "binary": False},
-    "optical_binary": {"emb": "embeddings/s2_l2a", "res": "results_binary_optical", "binary": True},
+    "joint":          {"emb": "embeddings/joint",  "res": f"{RESULTS}/results_0",                "binary": False},
+    "joint_binary":   {"emb": "embeddings/joint",  "res": f"{RESULTS}/results_binary",           "binary": True},
+    "optical":        {"emb": "embeddings/s2_l2a", "res": f"{RESULTS}/results_optical",          "binary": False},
+    "optical_binary": {"emb": "embeddings/s2_l2a", "res": f"{RESULTS}/results_binary_optical",   "binary": True},
 }
 # Model subdirectory names, as run_eval.py / run_eval_binary.py write them.
 MODEL_NAMES = ["log_reg", "rf"]

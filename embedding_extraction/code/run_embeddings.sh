@@ -8,9 +8,9 @@
 #SBATCH --output=slurm_embed_%j.log
 
 # --- paths (adjust if yours differ) ---
-PROJ=/share/castor/home/e2406749/tropical_forest_disturbance
+PROJ="${SLURM_SUBMIT_DIR:-$PWD}"   # sbatch is launched from the repository root
 TILES=$HOME/thesis_tiles_120px
-CSV=$PROJ/data_csv
+CSV=$PROJ/data/data_csv
 
 # --- conda ---
 source /share/common/anaconda/etc/profile.d/conda.sh

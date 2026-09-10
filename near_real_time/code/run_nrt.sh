@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --time=04:00:00
-#SBATCH --output=results_nrt/nrt_%A_%a.log
+#SBATCH --output=near_real_time/results/results_nrt/nrt_%A_%a.log
 
 # One array task per FID: the FIDs share no state, so they run side by side
 # instead of looping inside a single job.
@@ -22,7 +22,7 @@ VERSION=${VERSION:-3}            # cloud filter restricting the acquisitions
 
 if [ -z "$SLURM_JOB_ID" ]; then                 # login node: submit, do not compute
     [ $# -gt 0 ] && FIDS=("$@")
-    mkdir -p results_nrt                        # slurm opens the log before the task runs
+    mkdir -p near_real_time/results/results_nrt         # slurm opens the log before the task runs
     RANGE="0-$((${#FIDS[@]} - 1))${THROTTLE:+%$THROTTLE}"
     echo "submitting ${#FIDS[@]} FIDs (${FIDS[*]}) as array $RANGE, cloud filter v$VERSION"
     exec sbatch --array="$RANGE" --export=ALL,VERSION="$VERSION" "$0" "${FIDS[@]}"
@@ -38,7 +38,9 @@ fi
 source /share/common/anaconda/etc/profile.d/conda.sh
 conda activate croma_viz
 
-cd /share/castor/home/e2406749/tropical_forest_disturbance
+# sbatch is launched from the repository root, and SLURM records that directory here,
+# so the job runs from the root on any account. Falls back to $PWD outside SLURM.
+cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 export PYTHONPATH="$PWD"   # shared modules (seg_dataset, token_pipeline, obs_date...) live at the repo root
 export PYTHONUNBUFFERED=1
@@ -47,5 +49,5 @@ export OMP_NUM_THREADS=1   # due to n_jobs parallelism in RF
 export PYTHONWARNINGS="ignore::FutureWarning"
 
 echo "Node: $(hostname) | CPUs: $SLURM_CPUS_PER_TASK | FID: $FID | v$VERSION | Start: $(date)"
-python near_real_time/code/nrt_fid.py --fid "$FID" --mode all --model all --version "$VERSION" --save results_nrt
+python near_real_time/code/nrt_fid.py --fid "$FID" --mode all --model all --version "$VERSION" --save near_real_time/results/results_nrt
 echo "End: $(date)"

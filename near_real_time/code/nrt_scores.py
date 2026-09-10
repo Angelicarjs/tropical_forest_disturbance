@@ -29,7 +29,7 @@ import pandas as pd
 from nrt_fid import DEFAULT_VERSION, MODEL_NAMES, MODES, SHP, fid_curve
 from seg_dataset import CLASS_TO_ID
 
-OUT = "nrt_scores"
+OUT = "near_real_time/results/nrt_scores_new"   # the reported scores live in nrt_scores/; run_scores.sh writes there
 
 
 def main():
@@ -41,6 +41,8 @@ def main():
                     help=f"any of {MODEL_NAMES}, or 'all'")
     ap.add_argument("--version", default=DEFAULT_VERSION, choices=["1", "2", "3"],
                     help=f"cloud filter (default: {DEFAULT_VERSION}, the strictest)")
+    ap.add_argument("--out", default=OUT,
+                    help="output root; defaults beside the reported scores, not onto them")
     ap.add_argument("--tag", default="",
                     help="suffix for the output folder, e.g. 'test'. Keeps the scores "
                          "of one split from landing next to those of another, which "
@@ -91,7 +93,7 @@ def main():
             curve["view_date"] = view
             curve["days"] = (curve["date"] - view).dt.days
             name = f"{mode}_{model}_v{args.version}"
-            d = os.path.join(OUT, f"{name}_{args.tag}" if args.tag else name)
+            d = os.path.join(args.out, f"{name}_{args.tag}" if args.tag else name)
             os.makedirs(d, exist_ok=True)
             dest = os.path.join(d, f"fid_{args.fid}.csv")
             curve.to_csv(dest, index=False)

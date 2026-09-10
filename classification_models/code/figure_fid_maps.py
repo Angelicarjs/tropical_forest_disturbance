@@ -15,8 +15,8 @@ picking the largest or the clearest one per class would flatter the model. State
 in the caption.
 
 Usage, from the repository root:
-    python classification_models/code/figure_fid_maps.py --results-root results
-    python classification_models/code/figure_fid_maps.py --results-root results --fids 389 25 3
+    python classification_models/code/figure_fid_maps.py
+    python classification_models/code/figure_fid_maps.py --fids 389 25 3
 """
 import argparse
 import os
@@ -59,7 +59,7 @@ def one_fid_per_class(ds, seed):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--results-root", default="results",
+    ap.add_argument("--results-root", default="classification_models/results/results_0",
                     help="directory run_eval.py wrote into, holding <model>/model.joblib")
     ap.add_argument("--model", default="log_reg", choices=["log_reg", "rf"])
     ap.add_argument("--fids", nargs="+", default=None,

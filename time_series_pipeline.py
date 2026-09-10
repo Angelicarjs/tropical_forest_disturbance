@@ -14,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import glob
+import os
 import re
 from pathlib import Path
 
@@ -38,7 +39,9 @@ from make_embeddings import (
     load_or_compute_stats,
 )
 
-TILES_ROOT = "/share/castor/home/e2406749/thesis_tiles_120px"
+# The tiles live outside the repository. $HOME/thesis_tiles_120px on the cluster,
+# the same location run_eval.py and run_embeddings.sh assume; override with THESIS_TILES.
+TILES_ROOT = os.environ.get("THESIS_TILES", os.path.expanduser("~/thesis_tiles_120px"))
 EMB_ROOT = "embeddings"
 SHP_PATH = "data/data_shp/label_polygons.shp"
 CSV_TEMPLATE = "data/data_csv/{version}_images_s2_s1.csv"

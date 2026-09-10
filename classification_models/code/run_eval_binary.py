@@ -176,7 +176,8 @@ def main():
                     help="repeats for the training-size sensitivity analysis")
     ap.add_argument("--fids", nargs="*", default=None,
                     help="test FIDs to map (default: first 4 test FIDs)")
-    ap.add_argument("--results-root", default="results_binary")
+    ap.add_argument("--results-root", default="classification_models/results/results_binary_new",
+                    help="the reported runs sit beside it; run_eval_binary.sh names them explicitly")
     ap.add_argument("--align-with", nargs="*", default=None,
                     help="modalities to intersect tiles with (e.g. joint s2_l2a) "
                          "so class tokens are identical across runs; forest is left as is")

@@ -9,9 +9,11 @@
 source /share/common/anaconda/etc/profile.d/conda.sh
 conda activate croma_viz
 
-cd /share/castor/home/e2406749/tropical_forest_disturbance
+# sbatch is launched from the repository root, and SLURM records that directory here,
+# so the job runs from the root on any account. Falls back to $PWD outside SLURM.
+cd "${SLURM_SUBMIT_DIR:-$PWD}"
 export PYTHONPATH="$PWD"   # shared modules live at the repo root
 
 echo "Nodo: $(hostname) | Inicio: $(date)"
-python preprocessing/code/tile_pipeline.py --sample-pct 10 --tile-size 224 --workers 6 --resume --products s2_l2a
+python preprocessing/code/tile_pipeline.py --workers 6 --resume
 echo "Fin: $(date)"
